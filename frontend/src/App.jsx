@@ -9,7 +9,7 @@ const App = () => {
   return (
     <Router>
       <Navbar />
-      <main className="flex justify-center h-4/5 px-4">
+      <main className="flex justify-center h-full px-4">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/buy" element={<Buy />} />
