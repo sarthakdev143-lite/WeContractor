@@ -1,11 +1,24 @@
-import React from 'react'
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import Buy from './components/Buy';
+import Sell from './components/Sell';
 
 const App = () => {
   return (
-    <main>
-      <h1 className='text-4xl text-white'>Hello World!</h1>
-    </main>
-  )
-}
+    <Router>
+      <Navbar />
+      <main className="flex justify-center h-4/5 px-4">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/buy" element={<Buy />} />
+          <Route path="/sell" element={<Sell />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </main>
+    </Router>
+  );
+};
 
-export default App
+export default App;
