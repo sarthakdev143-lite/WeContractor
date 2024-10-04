@@ -10,6 +10,7 @@ const Buy = () => {
     ]);
 
     const [sortType, setSortType] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleSort = (e) => {
         const sortBy = e.target.value;
@@ -27,11 +28,20 @@ const Buy = () => {
         setProperties(sortedProperties);
     };
 
-    // Render stars based on the rating of each property
+    const handleSearch = (e) => {
+        setSearchQuery(e.target.value);
+    };
+
+    const filteredProperties = properties.filter(
+        (property) =>
+            property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            property.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     const renderStars = (rating) => {
-        const fullStars = Math.floor(rating); // Number of full stars
-        const halfStar = rating % 1 !== 0; // Check if there's a half-star
-        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0); // Calculate empty stars
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 !== 0;
+        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
 
         return (
             <div className="flex items-center">
@@ -48,51 +58,59 @@ const Buy = () => {
 
     return (
         <section className="w-full h-fit p-8 border border-gray-300 rounded-lg shadow-md bg-white flex flex-col">
-            <div id="sort-by" className="mb-8 sticky top-8 bg-white w-full px-6 py-4 rounded shadow-xl">
-                <label htmlFor="sort" className="block text-lg font-semibold text-gray-700 mb-2">Sort By:</label>
-                <select
-                    id="sort"
-                    value={sortType}
-                    onChange={handleSort}
-                    className="w-48 p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="">Select</option>
-                    <option value="price">Price</option>
-                    <option value="rating">Rating</option>
-                    <option value="area">Area (sq. feet)</option>
-                </select>
-            </div>
-            <div className='flex gap-4'>
-                <div className="w-4/5 flex flex-col gap-8">
-                    {properties.map((property, index) => (
-                        <Link to={`/view/${index}`} target='_blank' key={index} className="w-full h-fit">
-                            <div className="flex bg-gray-50 rounded-lg shadow-lg overflow-hidden">
-                                <div className="h-96 w-[80%] bg-slate-300">
-                                    <img loading='lazy' src={property.image} alt="property first-look" className="w-full h-full object-cover" />
-                                </div>
-                                <div className="p-6 flex flex-col gap-4">
-                                    <p className="text-2xl font-bold text-gray-800">{property.title}</p>
-                                    <p className="text-lg text-gray-600">{property.description}</p>
-                                    <p className="text-lg text-gray-700"><span className="font-semibold">Location:</span> {property.location}</p>
-                                    <p className="text-lg text-gray-700 font-semibold">Price: <span className='text-xl'>₹{property.price.toLocaleString()}</span></p>
-                                    <p className="text-lg text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = {property.length * property.breadth} sq. feet</p>
-                                    <p className="text-lg text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
-                                    <p className="text-lg text-gray-700 flex items-center">
-                                        <span className="font-semibold mr-2">Rating:</span>
-                                        {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating}/5)</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
+            <div className="flex justify-between items-center mb-8 sticky top-4 z-10 bg-transparent backdrop-blur w-full px-6 py-4 rounded shadow-xl">
+                <div id="search-bar" className="w-1/3">
+                    <input
+                        type="text"
+                        placeholder="Search by title or location"
+                        value={searchQuery}
+                        onChange={handleSearch}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                 </div>
-
-                <aside className="w-1/5 h-fit p-4 border-l border-gray-300">
-                    <div className="bg-gray-100 h-full rounded-lg p-6 text-center shadow-lg">
-                        <p className="text-lg font-bold mb-4 text-gray-700">Ad Section</p>
-                        <p className="text-gray-600">Place your advertisements or additional content here.</p>
-                    </div>
-                </aside>
+                <div id="sort-by" className="w-1/3">
+                    <label htmlFor="sort" className="block text-lg font-semibold text-gray-700 mb-2">Sort By:</label>
+                    <select
+                        id="sort"
+                        value={sortType}
+                        onChange={handleSort}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Select</option>
+                        <option value="price">Price</option>
+                        <option value="rating">Rating</option>
+                        <option value="area">Area (sq. feet)</option>
+                    </select>
+                </div>
+            </div>
+            <div className='flex flex-wrap gap-6'>
+                <div className="flex flex-wrap gap-8 w-full">
+                    {filteredProperties.length > 0 ? (
+                        filteredProperties.map((property, index) => (
+                            <Link to={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit">
+                                <div className="flex flex-col bg-gray-50 rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-[1.025]">
+                                    <div className="h-48 sm:h-64 md:h-72 bg-slate-300">
+                                        <img loading='lazy' src={property.image} alt="property first-look" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="p-4 flex flex-col gap-2">
+                                        <p className="text-xl font-bold text-gray-800">{property.title}</p>
+                                        <p className="text-sm text-gray-600">{property.description}</p>
+                                        <p className="text-sm text-gray-700"><span className="font-semibold">Location:</span> {property.location}</p>
+                                        <p className="text-sm text-gray-700 font-semibold">Price: <span className='text-lg'>₹{property.price.toLocaleString()}</span></p>
+                                        <p className="text-sm text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = {property.length * property.breadth} sq. feet</p>
+                                        <p className="text-sm text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
+                                        <p className="text-sm text-gray-700 flex items-center">
+                                            <span className="font-semibold mr-2">Rating:</span>
+                                            {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating}/5)</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))
+                    ) : (
+                        <p className="text-lg text-gray-500">No properties found matching your criteria.</p>
+                    )}
+                </div>
             </div>
         </section>
     );
