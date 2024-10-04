@@ -58,7 +58,7 @@ const Buy = () => {
 
     return (
         <section className="w-full h-fit p-8 border border-gray-300 rounded-lg shadow-md bg-white flex flex-col">
-            <div className="flex justify-between items-center mb-8 sticky top-4 z-10 bg-transparent backdrop-blur w-full px-6 py-4 rounded shadow-xl">
+            <div className="flex justify-between items-center mb-8 sticky top-4 z-10 bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 rounded shadow-xl">
                 <div id="search-bar" className="w-1/3">
                     <input
                         type="text"
@@ -117,3 +117,14 @@ const Buy = () => {
 };
 
 export default Buy;
+
+// TODO:
+// make the top bar (container of search bar and sort-by) responsive... also add 10 more plots...
+// Add a toggle to switch between ascending and descending order for the selected sorting criteria. This will allow users more control over how they view the properties.
+// Price Range Filter - Provide sliders or input fields for users to define a minimum and maximum price range.
+//  Plot Size Filter - Include options for users to filter properties based on size (length x breadth) to ensure they find plots that meet their space requirements. This can be implemented with 2 input fields.
+//  Property Type Filter - Enable users to filter properties based on type (e.g., residential, commercial, land, etc.). - This can be a checkbox list allowing multiple selections.
+// Amenities Filter - Include filters for specific amenities, such as swimming pools, gardens, parking spaces, etc. Users can check boxes for the amenities desire.
+// Date Listed Sort properties based on when they were listed (e.g., newest first). This helps users find the most recent listings quickly.
+
+
