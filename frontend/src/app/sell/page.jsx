@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Sell = () => {
     return (
         <section className="w-3/4 p-8 border border-gray-300 rounded-lg shadow-md bg-white">
