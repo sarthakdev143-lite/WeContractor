@@ -10,10 +10,10 @@ const Navbar = () => {
     const [isLoggedin, setIsLoggedin] = useState(false);
 
     return (
-        <nav className="flex justify-between items-center sm:px-12 px-4 pb-3">
+        <nav className="flex justify-between py-5 items-center sm:px-12 px-4 pb-3">
             <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-800">
                 <Image
-                    className='max-w-40'
+                    className='max-w-24'
                     src={logo}
                     alt="Logo"
                 />

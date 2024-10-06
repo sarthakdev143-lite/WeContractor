@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const page = () => {
   return (
-    <main className="flex flex-wrap gap-20 h-fit m-auto transform justify-center items-center">
+    <section className="flex flex-wrap gap-20 h-fit translate-y-12 p-6 transform justify-center items-center">
       <Link href="/buy"
         className="text-3xl font-semibold py-10 px-20 bg-green-500 hover:bg-green-600 rounded-lg shadow-lg transition-all duration-300"
       >
@@ -13,7 +13,7 @@ const page = () => {
       >
         Sell
       </Link>
-    </main>
+    </section>
   )
 }
 
