@@ -37,6 +37,7 @@ const Buy = () => {
 
     const [priceRange, setPriceRange] = useState([minPrice, maxPrice]);
     const [plotSizeRange, setPlotSizeRange] = useState([minPlotSize, maxPlotSize]);
+    const [toggleFilters, setToggleFilters] = useState(false);
 
     useEffect(() => {
         filterProperties();
@@ -167,113 +168,122 @@ const Buy = () => {
     };
 
     return (
-        <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col">
-            <div className="flex flex-wrap justify-between items-center mb-8 bg-white transition-shadow bg-opacity-50 backdrop-blur w-full px-6 py-4 rounded shadow-xl gap-6">
-                <div id="sort-by" className="sm:w-1/4 w-full flex items-center gap-3">
-                    <label htmlFor="sort" className="text-lg font-semibold text-gray-700 whitespace-nowrap">Sort By:</label>
-                    <select
-                        id="sort"
-                        value={sortType}
-                        onChange={handleSort}
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ease-in-out duration-150"
-                    >
-                        <option value="">Featured</option>
-                        <option value="price-low-to-high">Price: Low to High</option>
-                        <option value="price-high-to-low">Price: High to Low</option>
-                        <option value="rating">Avg. Customer Review</option>
-                        <option value="newest">Newest Arrivals</option>
-                    </select>
-                </div>
-                <div id="price-range" className="sm:w-1/3 w-full flex flex-col gap-2">
-                    <label className="text-lg font-semibold text-gray-700">Price Range:</label>
-                    <div className="relative w-full h-6" ref={priceSliderRef}>
-                        <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
-                        <div
-                            className="absolute h-2 bg-blue-500 rounded-full top-2"
-                            style={{
-                                left: `${getThumbPosition(priceRange[0], minPrice, maxPrice)}%`,
-                                right: `${100 - getThumbPosition(priceRange[1], minPrice, maxPrice)}%`
-                            }}
-                        ></div>
-                        {[0, 1].map((index) => (
+        <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
+            <div id="filters-wrapper" className={`${toggleFilters ? 'max-h-[1000px]' : 'max-h-0'} overflow-hidden`}>
+                <div className="flex flex-wrap justify-between items-center bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 gap-6 rounded shadow-xl relative">
+                    <div id="sort-by" className="sm:w-1/4 w-full flex items-center gap-3">
+                        <label htmlFor="sort" className="text-lg font-semibold text-gray-700 whitespace-nowrap">Sort By:</label>
+                        <select
+                            id="sort"
+                            value={sortType}
+                            onChange={handleSort}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ease-in-out duration-150"
+                        >
+                            <option value="">Featured</option>
+                            <option value="price-low-to-high">Price: Low to High</option>
+                            <option value="price-high-to-low">Price: High to Low</option>
+                            <option value="rating">Avg. Customer Review</option>
+                            <option value="newest">Newest Arrivals</option>
+                        </select>
+                    </div>
+                    <div id="price-range" className="sm:w-1/3 w-full flex flex-col gap-2">
+                        <label className="text-lg font-semibold text-gray-700">Price Range:</label>
+                        <div className="relative w-full h-6" ref={priceSliderRef}>
+                            <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
                             <div
-                                key={index}
-                                className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer"
-                                style={{ left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%` }}
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    const handleMouseMove = (event) => {
-                                        handleThumbMove(index, event.clientX, priceRange, setPriceRange, minPrice, maxPrice, priceSliderRef);
-                                    };
-                                    const handleMouseUp = () => {
-                                        document.removeEventListener('mousemove', handleMouseMove);
-                                        document.removeEventListener('mouseup', handleMouseUp);
-                                    };
-                                    document.addEventListener('mousemove', handleMouseMove);
-                                    document.addEventListener('mouseup', handleMouseUp);
+                                className="absolute h-2 bg-blue-500 rounded-full top-2"
+                                style={{
+                                    left: `${getThumbPosition(priceRange[0], minPrice, maxPrice)}%`,
+                                    right: `${100 - getThumbPosition(priceRange[1], minPrice, maxPrice)}%`
                                 }}
                             ></div>
-                        ))}
+                            {[0, 1].map((index) => (
+                                <div
+                                    key={index}
+                                    className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer"
+                                    style={{ left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%` }}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        const handleMouseMove = (event) => {
+                                            handleThumbMove(index, event.clientX, priceRange, setPriceRange, minPrice, maxPrice, priceSliderRef);
+                                        };
+                                        const handleMouseUp = () => {
+                                            document.removeEventListener('mousemove', handleMouseMove);
+                                            document.removeEventListener('mouseup', handleMouseUp);
+                                        };
+                                        document.addEventListener('mousemove', handleMouseMove);
+                                        document.addEventListener('mouseup', handleMouseUp);
+                                    }}
+                                ></div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between mt-2">
+                            <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[0])}</span>
+                            <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[1])}</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between mt-2">
-                        <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[0])}</span>
-                        <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[1])}</span>
-                    </div>
-                </div>
-
-                <div id="plot-size-range" className="sm:w-1/3 w-full flex flex-col gap-2">
-                    <label className="text-lg font-semibold text-gray-700">Plot Size Range (sq ft):</label>
-                    <div className="relative w-full h-6" ref={plotSizeSliderRef}>
-                        <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
-                        <div
-                            className="absolute h-2 bg-green-500 rounded-full top-2"
-                            style={{
-                                left: `${getThumbPosition(plotSizeRange[0], minPlotSize, maxPlotSize)}%`,
-                                right: `${100 - getThumbPosition(plotSizeRange[1], minPlotSize, maxPlotSize)}%`
-                            }}
-                        ></div>
-                        {[0, 1].map((index) => (
+                    <div id="plot-size-range" className="sm:w-1/3 w-full flex flex-col gap-2">
+                        <label className="text-lg font-semibold text-gray-700">Plot Size Range (sq ft):</label>
+                        <div className="relative w-full h-6" ref={plotSizeSliderRef}>
+                            <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
                             <div
-                                key={index}
-                                className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer"
-                                style={{ left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%` }}
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    const handleMouseMove = (event) => {
-                                        handleThumbMove(index, event.clientX, plotSizeRange, setPlotSizeRange, minPlotSize, maxPlotSize, plotSizeSliderRef);
-                                    };
-                                    const handleMouseUp = () => {
-                                        document.removeEventListener('mousemove', handleMouseMove);
-                                        document.removeEventListener('mouseup', handleMouseUp);
-                                    };
-                                    document.addEventListener('mousemove', handleMouseMove);
-                                    document.addEventListener('mouseup', handleMouseUp);
+                                className="absolute h-2 bg-green-500 rounded-full top-2"
+                                style={{
+                                    left: `${getThumbPosition(plotSizeRange[0], minPlotSize, maxPlotSize)}%`,
+                                    right: `${100 - getThumbPosition(plotSizeRange[1], minPlotSize, maxPlotSize)}%`
                                 }}
                             ></div>
-                        ))}
+                            {[0, 1].map((index) => (
+                                <div
+                                    key={index}
+                                    className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer"
+                                    style={{ left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%` }}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        const handleMouseMove = (event) => {
+                                            handleThumbMove(index, event.clientX, plotSizeRange, setPlotSizeRange, minPlotSize, maxPlotSize, plotSizeSliderRef);
+                                        };
+                                        const handleMouseUp = () => {
+                                            document.removeEventListener('mousemove', handleMouseMove);
+                                            document.removeEventListener('mouseup', handleMouseUp);
+                                        };
+                                        document.addEventListener('mousemove', handleMouseMove);
+                                        document.addEventListener('mouseup', handleMouseUp);
+                                    }}
+                                ></div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between mt-2">
+                            <span className="text-sm text-gray-600">{plotSizeRange[0]} sq ft</span>
+                            <span className="text-sm text-gray-600">{plotSizeRange[1]} sq ft</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between mt-2">
-                        <span className="text-sm text-gray-600">{plotSizeRange[0]} sq ft</span>
-                        <span className="text-sm text-gray-600">{plotSizeRange[1]} sq ft</span>
+                    <div id="search-bar" className="sm:w-1/4 w-full">
+                        <input
+                            type="text"
+                            placeholder="Search by title or location"
+                            value={searchQuery}
+                            onChange={handleSearch}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div id="reset-filters" className="w-full sm:w-auto">
+                        <button
+                            onClick={resetFilters}
+                            className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                        >
+                            Reset Filters
+                        </button>
                     </div>
                 </div>
-                <div id="search-bar" className="sm:w-1/4 w-full">
-                    <input
-                        type="text"
-                        placeholder="Search by title or location"
-                        value={searchQuery}
-                        onChange={handleSearch}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-                <div id="reset-filters" className="w-full sm:w-auto">
-                    <button
-                        onClick={resetFilters}
-                        className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                    >
-                        Reset Filters
-                    </button>
-                </div>
+            </div>
+            <div className="flex justify-center mb-4">
+                <button
+                    onClick={() => setToggleFilters(!toggleFilters)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                >
+                    {toggleFilters ? 'Hide Filters' : 'Show Filters'}
+                </button>
             </div>
             <div className='flex flex-wrap gap-6'>
                 <div className="flex flex-wrap justify-center gap-8 w-full">
