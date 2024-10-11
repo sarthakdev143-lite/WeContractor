@@ -33,7 +33,7 @@ If required, a Docker image can be created with the Spring Boot plugin. Add `SPR
 environment variable when running the container.
 
 ```
-mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=github.sarthakdev143/backend
+mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=github.sarthakdev/backend
 ```
 
 ## Further readings

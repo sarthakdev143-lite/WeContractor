@@ -8,7 +8,7 @@
         <version>3.3.4</version>
         <relativePath /><!-- lookup parent from repository -->
     </parent>
-    <groupId>github.sarthakdev143</groupId>
+    <groupId>github.sarthakdev</groupId>
     <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>backend</name>
@@ -42,10 +42,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
