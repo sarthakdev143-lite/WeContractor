@@ -170,7 +170,7 @@ const Buy = () => {
     return (
         <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
             <div id="filters-wrapper" className={`${toggleFilters ? 'max-h-[1000px]' : 'max-h-0'} overflow-hidden`}>
-                <div className="flex flex-wrap justify-between items-center bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 gap-6 rounded shadow-xl relative">
+                <div className="flex flex-wrap justify-between items-center bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 gap-6 rounded shadow-2xl relative">
                     <div id="sort-by" className="sm:w-1/4 w-full flex items-center gap-3">
                         <label htmlFor="sort" className="text-lg font-semibold text-gray-700 whitespace-nowrap">Sort By:</label>
                         <select
