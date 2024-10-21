@@ -3,7 +3,6 @@ package github.sarthakdev.backend.beans;
 import java.util.List;
 import java.util.Date;
 
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.mongodb.core.mapping.Document;

@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { MYAXIOS } from "../../../components/Helper";
-import Cropper from "react-easy-crop";
+import { deleteFromCloudinary } from "../../../components/sell/handlers";
+import ProfilePictureUploader from "../../../components/auth/ProfilePictureUploader";
+import ImageCropModal from "../../../components/auth/ImageCropModal";
+import FormInput from "../../../components/auth/FormInput";
+import { validators } from "../../../components/sell/utils";
+import { useImageCrop } from "../../../components/hooks/useImageCrop";
 
 const DEFAULT_PFP = "/default-avatar.webp";
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dgbnelai8/upload";
-const UPLOAD_PRESET = "user_pfp_upload";
-
 const SignUp = () => {
+    // State management
     const [user, setUser] = useState({
         username: "",
         email: "",
@@ -25,92 +28,55 @@ const SignUp = () => {
     });
 
     const [preview, setPreview] = useState(DEFAULT_PFP);
-    const fileInputRef = useRef(null);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
-    // Image cropping states
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [rotation, setRotation] = useState(0);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
     const [imageSource, setImageSource] = useState(null);
     const [originalPFPname, setOriginalPFPname] = useState("");
+    const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
 
-    // Validation rules
-    const validateUsername = (username) => {
-        if (username.length < 3) {
-            return "Username must be at least 3 characters long";
+    const fileInputRef = useRef(null);
+
+    // Reset all image-related states
+    const resetImageStates = () => {
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+        setImageSource(null);
+        setOriginalPFPname("");
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""; // Reset file input
         }
-        if (username.length > 20) {
-            return "Username cannot exceed 20 characters";
-        }
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            return "Username can only contain letters, numbers, and underscores";
-        }
-        return "";
     };
 
-    const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return "Please enter a valid email address";
-        }
-        return "";
-    };
+    // Custom hook for image cropping
+    const {
+        crop,
+        setCrop,
+        zoom,
+        setZoom,
+        rotation,
+        setRotation,
+        croppedAreaPixels,
+        handleCropComplete
+    } = useImageCrop();
 
-    const validatePhoneNumber = (phoneNumber) => {
-        // This regex allows for different phone number formats
-        const phoneRegex = /^\+?[\d\s-()]{10,}$/;
-        if (!phoneRegex.test(phoneNumber)) {
-            return "Please enter a valid phone number";
-        }
-        return "";
-    };
-
-    const validatePassword = (password) => {
-        if (password.length < 8) {
-            return "Password must be at least 8 characters long";
-        }
-        if (!/[A-Z]/.test(password)) {
-            return "Password must contain at least one uppercase letter";
-        }
-        if (!/[a-z]/.test(password)) {
-            return "Password must contain at least one lowercase letter";
-        }
-        if (!/[0-9]/.test(password)) {
-            return "Password must contain at least one number";
-        }
-        if (!/[!@#$%^&*]/.test(password)) {
-            return "Password must contain at least one special character (!@#$%^&*)";
-        }
-        return "";
-    };
-
+    // Form validation helper
     const validateField = (name, value) => {
-        switch (name) {
-            case "username":
-                return validateUsername(value);
-            case "email":
-                return validateEmail(value);
-            case "phoneNumber":
-                return validatePhoneNumber(value);
-            case "password":
-                return validatePassword(value);
-            default:
-                return "";
+        if (validators[name]) {
+            return validators[name](value);
         }
+        return "";
     };
 
+    // Form field change handler
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setUser((prevState) => ({
-            ...prevState,
+        setUser(prev => ({
+            ...prev,
             [name]: value,
         }));
 
-        // Validate on change
         const error = validateField(name, value);
         setErrors(prev => ({
             ...prev,
@@ -118,9 +84,8 @@ const SignUp = () => {
         }));
     };
 
-    // Function to check if the form is valid
+    // Form validation
     const isFormValid = () => {
-        console.log("Checking form validity...");
         const newErrors = {
             username: validateField("username", user.username),
             email: validateField("email", user.email),
@@ -128,69 +93,11 @@ const SignUp = () => {
             password: validateField("password", user.password),
         };
 
-        console.log("New errors:", newErrors);
-
         setErrors(newErrors);
-
-        const isValid = !Object.values(newErrors).some(error => error !== "");
-        console.log("Form validity:", isValid);
-        return isValid;
+        return !Object.values(newErrors).some(error => error !== "");
     };
 
-    const resetCropStates = () => {
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
-        setCroppedAreaPixels(null);
-        setImageSource(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        console.log("File selected:", file);
-
-        if (file) {
-            // Validate file size (e.g., max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert("File size should not exceed 5MB");
-                console.log("File size exceeded:", file.size);
-                return;
-            }
-
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                alert("Please upload an image file");
-                console.log("Invalid file type:", file.type);
-                return;
-            }
-
-            setOriginalPFPname(file.name);
-            console.log("Original profile picture name set to:", file.name);
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImageSource(reader.result);
-                setIsModalOpen(true);
-                console.log("Image source set and modal opened");
-            };
-            reader.readAsDataURL(file);
-            console.log("File reading started");
-        } else {
-            console.log("No file selected");
-        }
-    };
-
-    const handleModalClose = () => {
-        setIsModalOpen(false);
-        resetCropStates();
-    };
-
-    const onCropComplete = (croppedArea, croppedAreaPixels) => {
-        setCroppedAreaPixels(croppedAreaPixels);
-    };
-
+    // Image handling methods
     const createImage = (url) =>
         new Promise((resolve, reject) => {
             const image = new Image();
@@ -238,70 +145,128 @@ const SignUp = () => {
                 }, "image/jpeg");
             });
         } catch (e) {
-            console.error(e);
+            console.error("Error creating cropped image:", e);
             return null;
         }
     };
 
-    const handleCropSave = async () => {
-        const croppedImage = await getCroppedImage();
-        if (croppedImage) {
-            const croppedImageUrl = URL.createObjectURL(croppedImage);
-            setPreview(croppedImageUrl);
-            setUser((prevState) => ({
-                ...prevState,
-                profilePicture: croppedImage,
-            }));
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        console.log("File selected:", file);
+
+        if (file) {
+            // Validate file size (e.g., max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File size should not exceed 5MB");
+                resetImageStates();
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert("Please upload an image file");
+                resetImageStates();
+                return;
+            }
+
+            setOriginalPFPname(file.name);
+            const reader = new FileReader();
+            reader.onload = () => {
+                setImageSource(reader.result);
+                setIsModalOpen(true);
+            };
+            reader.readAsDataURL(file);
         }
-        handleModalClose();
     };
 
+    // Modified remove profile picture handler
     const removeProfilePicture = () => {
-        setUser((prevState) => ({
-            ...prevState,
+        setUser(prev => ({
+            ...prev,
             profilePicture: null,
         }));
         setPreview(DEFAULT_PFP);
-        resetCropStates();
+        resetImageStates();
     };
 
+    // Modified crop save handler
+    const handleCropSave = async () => {
+        try {
+            const croppedImage = await getCroppedImage();
+            if (croppedImage) {
+                const croppedImageUrl = URL.createObjectURL(croppedImage);
+                setPreview(croppedImageUrl);
+                setUser(prev => ({
+                    ...prev,
+                    profilePicture: croppedImage,
+                }));
+            }
+        } catch (error) {
+            console.error("Error saving cropped image:", error);
+            alert("Failed to process the image. Please try again.");
+        } finally {
+            setIsModalOpen(false);
+        }
+    };
+
+    // Modified modal close handler
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        if (preview === DEFAULT_PFP) {
+            resetImageStates();
+        }
+    };
+
+    useEffect(() => {
+        fetch('/api/cloudinary/config')
+            .then(res => res.json())
+            .then(data => setCloudinaryConfig(data))
+            .catch(err => console.error('Error fetching Cloudinary config:', err));
+    }, []);
+
+    // Cloudinary upload
     const uploadImageToCloudinary = async (imageFile) => {
+        if (!cloudinaryConfig) {
+            throw new Error('Cloudinary configuration not loaded');
+        }
+
         const formData = new FormData();
         formData.append("file", imageFile);
-        formData.append("upload_preset", UPLOAD_PRESET);
+        formData.append("upload_preset", cloudinaryConfig.uploadPreset);
 
         try {
-            console.log("Uploading image to Cloudinary...");
-            const response = await fetch(CLOUDINARY_URL, {
+            const response = await fetch(cloudinaryConfig.cloudinaryUrl, {
                 method: "POST",
                 body: formData,
             });
             const data = await response.json();
-            console.log("Image upload successful. Secure URL:", data.secure_url);
             return data.secure_url;
         } catch (error) {
-            console.error("Cloudinary upload failed", error);
-            return null;
+            console.error("Cloudinary upload failed:", error);
+            throw error;
         }
     };
 
+    // Form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Form submitted:", user);
+
+        if (!cloudinaryConfig) {
+            alert("Configuration loading... Please try again.");
+            return;
+        }
 
         if (!isFormValid()) {
             alert("Please fix all validation errors before submitting.");
-            console.log("Validation errors:", errors);
             return;
         }
 
         setIsLoading(true);
+        let profilePictureUrl = "";
 
         try {
-            let profilePictureUrl = "";
             if (user.profilePicture) {
                 profilePictureUrl = await uploadImageToCloudinary(user.profilePicture);
-                console.log("Profile picture uploaded to Cloudinary:", profilePictureUrl);
             }
 
             const formData = new FormData();
@@ -310,162 +275,90 @@ const SignUp = () => {
             formData.append("phoneNumber", user.phoneNumber);
             formData.append("profilePictureUrl", profilePictureUrl);
             formData.append("password", user.password);
-            console.log("Form data:", formData.get("username"), formData.get("email"), formData.get("phoneNumber"), formData.get("profilePictureUrl"), formData.get("password"));
 
-            console.log("Sign-up API response : ",
-                await MYAXIOS.post("/api/user/signup", formData, {
-                    headers: { "Content-Type": "application/json" },
-                })
-            );
-
-            alert("User signed up successfully!");
-            setUser({
-                username: "",
-                email: "",
-                phoneNumber: "",
-                password: "",
-                profilePicture: null,
+            const response = await MYAXIOS.post("/api/user/signup", formData, {
+                headers: { "Content-Type": "application/json" },
             });
 
-            setErrors({
-                username: "",
-                email: "",
-                phoneNumber: "",
-                password: "",
-            });
+            console.log("API Response :- \n");
+            alert(response.data.message);
+
+            // Reset form
+            setPreview(DEFAULT_PFP);
+            setUser({ username: "", email: "", phoneNumber: "", password: "", profilePicture: null });
+            setErrors({ username: "", email: "", phoneNumber: "", password: "" });
         } catch (error) {
-            console.error("Sign-up API error:", error);
-            alert("Sign-up failed!\nReason : " + error.response.data.message);
+            if (profilePictureUrl) {
+                await deleteFromCloudinary(profilePictureUrl.split('/').pop().split('.')[0], "image");
+            }
+            alert("Sign-up failed!\nReason : " + error);
         } finally {
             setIsLoading(false);
         }
     };
 
-
-    // Helper function to determine input field classes based on validation state
-    const getInputClassName = (fieldName) => {
-        const baseClasses = "w-full px-4 py-2 border rounded-lg transition-colors duration-200 outline-none";
-        if (errors[fieldName]) {
-            return `${baseClasses} border-red-500 focus:border-red-500 focus:ring-red-500`;
-        }
-        if (user[fieldName] && !errors[fieldName]) {
-            return `${baseClasses} border-green-500 focus:border-green-500 focus:ring-green-500`;
-        }
-        return `${baseClasses} border-gray-300 focus:border-blue-500 focus:ring-blue-500`;
-    };
-
     return (
         <section className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Profile Picture Section */}
-                <div className="relative w-32 h-32 mx-auto">
-                    <img
-                        src={preview}
-                        alt="Profile Preview"
-                        className="w-full h-full rounded-full object-cover border border-gray-300"
-                    />
-                    {user.profilePicture && (
-                        <i
-                            onClick={removeProfilePicture}
-                            className="ri-close-line text-white absolute bottom-1 left-1 flex justify-center items-center bg-red-600 w-7 h-7 rounded-full cursor-pointer hover:bg-red-700 transition-colors duration-200"
-                        />
-                    )}
-                    <i
-                        onClick={() => fileInputRef.current.click()}
-                        className="ri-image-add-line text-white absolute bottom-1 right-1 flex justify-center items-center bg-blue-600 w-7 h-7 rounded-full cursor-pointer hover:bg-blue-700 transition-colors duration-200"
-                    />
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        ref={fileInputRef}
-                        className="hidden"
-                    />
-                </div>
+                <ProfilePictureUploader
+                    preview={preview}
+                    onFileChange={handleFileChange}
+                    onRemove={removeProfilePicture}
+                    DEFAULT_PFP={DEFAULT_PFP}
+                    fileInputRef={fileInputRef}
+                />
 
-                {/* Form Fields */}
                 <div className="space-y-4">
-                    {/* Username Field */}
-                    <div className="space-y-1">
-                        <input
-                            type="text"
-                            name="username"
-                            value={user.username}
-                            onChange={handleChange}
-                            placeholder="Username"
-                            className={getInputClassName("username")}
-                            required
-                            disabled={isLoading}
-                        />
-                        {errors.username && (
-                            <p className="text-red-500 text-sm">{errors.username}</p>
-                        )}
-                    </div>
+                    <FormInput
+                        type="text"
+                        name="username"
+                        value={user.username}
+                        onChange={handleChange}
+                        placeholder="Username"
+                        error={errors.username}
+                        isLoading={isLoading}
+                        required
+                    />
 
-                    {/* Email Field */}
-                    <div className="space-y-1">
-                        <input
-                            type="email"
-                            name="email"
-                            value={user.email}
-                            onChange={handleChange}
-                            placeholder="Email"
-                            className={getInputClassName("email")}
-                            required
-                            disabled={isLoading}
-                        />
-                        {errors.email && (
-                            <p className="text-red-500 text-sm">{errors.email}</p>
-                        )}
-                    </div>
+                    <FormInput
+                        type="email"
+                        name="email"
+                        value={user.email}
+                        onChange={handleChange}
+                        placeholder="Email"
+                        error={errors.email}
+                        isLoading={isLoading}
+                        required
+                    />
 
-                    {/* Phone Number Field */}
-                    <div className="space-y-1">
-                        <input
-                            type="tel"
-                            name="phoneNumber"
-                            value={user.phoneNumber}
-                            onChange={handleChange}
-                            placeholder="Phone Number"
-                            className={getInputClassName("phoneNumber")}
-                            required
-                            minLength={10}
-                            maxLength={10}
-                            disabled={isLoading}
-                        />
-                        {errors.phoneNumber && (
-                            <p className="text-red-500 text-sm">{errors.phoneNumber}</p>
-                        )}
-                    </div>
+                    <FormInput
+                        type="tel"
+                        name="phoneNumber"
+                        value={user.phoneNumber}
+                        onChange={handleChange}
+                        placeholder="Phone Number"
+                        error={errors.phoneNumber}
+                        isLoading={isLoading}
+                        required
+                        minLength={10}
+                        maxLength={10}
+                    />
 
-                    {/* Password Field */}
-                    <div className="space-y-1">
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                value={user.password}
-                                onChange={handleChange}
-                                placeholder="Password"
-                                className={`${getInputClassName("password")} pr-10`}
-                                required
-                                disabled={isLoading}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            >
-                                <i className={`ri-${showPassword ? 'eye-line' : 'eye-off-line'}`} />
-                            </button>
-                        </div>
-                        {errors.password && (
-                            <p className="text-red-500 text-sm">{errors.password}</p>
-                        )}
-                    </div>
+                    <FormInput
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={user.password}
+                        onChange={handleChange}
+                        placeholder="Password"
+                        error={errors.password}
+                        isLoading={isLoading}
+                        required
+                        showPasswordToggle={true}
+                        showPassword={showPassword}
+                        onTogglePassword={() => setShowPassword(!showPassword)}
+                    />
                 </div>
 
-                {/* Submit Button */}
                 <button
                     type="submit"
                     disabled={isLoading || Object.values(errors).some(error => error !== "")}
@@ -481,96 +374,19 @@ const SignUp = () => {
                     )}
                 </button>
             </form>
-
-            {isModalOpen && (
-                <div className="fixed overflow-auto p-8 pt-16 my-8 -top-5 inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-xl shadow-xl max-w-[600px] w-full">
-                        <div className="relative h-[400px] w-full bg-gray-50">
-                            <Cropper
-                                image={imageSource}
-                                crop={crop}
-                                zoom={zoom}
-                                rotation={rotation}
-                                aspect={1}
-                                onCropChange={setCrop}
-                                onZoomChange={setZoom}
-                                onRotationChange={setRotation}
-                                onCropComplete={onCropComplete}
-                                cropShape="round"
-                                showGrid={true}
-                                className="!rounded-none"
-                            />
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-gray-700">
-                                        Zoom
-                                    </label>
-                                    <span className="text-sm text-gray-500">
-                                        {Math.round(zoom * 100)}%
-                                    </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <i className="ri-zoom-out-line text-gray-500" />
-                                    <input
-                                        type="range"
-                                        value={zoom}
-                                        min={1}
-                                        max={3}
-                                        step={0.1}
-                                        onChange={(e) => setZoom(parseFloat(e.target.value))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                    />
-                                    <i className="ri-zoom-in-line text-gray-500" />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-gray-700">
-                                        Rotation
-                                    </label>
-                                    <span className="text-sm text-gray-500">
-                                        {rotation}°
-                                    </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <i className="ri-anticlockwise-line text-gray-500" />
-                                    <input
-                                        type="range"
-                                        value={rotation}
-                                        min={0}
-                                        max={360}
-                                        step={1}
-                                        onChange={(e) => setRotation(parseFloat(e.target.value))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                    />
-                                    <i className="ri-clockwise-line text-gray-500" />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end space-x-3 pt-4 border-t">
-                                <button
-                                    type="button"
-                                    onClick={handleModalClose}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleCropSave}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200"
-                                >
-                                    Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ImageCropModal
+                isOpen={isModalOpen}
+                imageSource={imageSource}
+                crop={crop}
+                setCrop={setCrop}
+                zoom={zoom}
+                setZoom={setZoom}
+                rotation={rotation}
+                setRotation={setRotation}
+                onCropComplete={handleCropComplete}
+                onClose={handleModalClose}
+                onSave={handleCropSave}
+            />
         </section>
     );
 };
