@@ -280,18 +280,18 @@ const SignUp = () => {
                 headers: { "Content-Type": "application/json" },
             });
 
-            console.log("API Response :- \n");
+            console.log("API Response :- \n" + response.data);
             alert(response.data.message);
 
             // Reset form
-            setPreview(DEFAULT_PFP);
+            removeProfilePicture();
             setUser({ username: "", email: "", phoneNumber: "", password: "", profilePicture: null });
             setErrors({ username: "", email: "", phoneNumber: "", password: "" });
         } catch (error) {
             if (profilePictureUrl) {
                 await deleteFromCloudinary(profilePictureUrl.split('/').pop().split('.')[0], "image");
             }
-            alert("Sign-up failed!\nReason : " + error);
+            alert("Sign-up failed!\nReason : " +  error.response ? error.response.data : error.message);
         } finally {
             setIsLoading(false);
         }

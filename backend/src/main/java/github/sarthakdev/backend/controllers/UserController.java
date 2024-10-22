@@ -28,6 +28,7 @@ public class UserController {
             System.out.println("\n\n\nReceived new signup request for username: " + userDTO.getUsername());
             var newUser = userService.signup(userDTO);
             var response = new SignupResponse("User registered successfully.", newUser, true);
+            System.out.println("Final Response : " + response);
             return ResponseEntity.ok(response);
         } catch (UserAlreadyExistsException e) {
             System.out.println("\n\n\nSignup failed: " + e.getMessage());
