@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export const FormField = ({ field, value, onChange, error }) => (
     <div className="space-y-2">
         <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
@@ -134,10 +136,12 @@ export const FileUploader = ({ label, accept, files, onDrop, onRemove, getRootPr
                 {files.map((file, index) => (
                     <div key={index} className="relative flex-grow max-h-36 aspect-video">
                         {file.url.match(/\.(jpeg|jpg|gif|png)$/) != null ? (
-                            <img
+                            <Image
                                 src={file.url}
                                 alt={`preview ${index}`}
                                 className="object-cover w-full rounded-md"
+                                layout="fill"
+                                objectFit="cover"
                             />
                         ) : (
                             <video

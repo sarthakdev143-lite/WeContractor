@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const ProfilePictureUploader = ({
     preview,
     onFileChange,
@@ -7,10 +9,12 @@ const ProfilePictureUploader = ({
 }) => {
     return (
         <div className="relative w-32 h-32 mx-auto">
-            <img
+            <Image
                 src={preview}
                 alt="Profile Preview"
                 className="w-full h-full rounded-full object-cover border border-gray-300"
+                layout="fill"
+                objectFit="cover"
             />
             {preview !== DEFAULT_PFP && (
                 <i
