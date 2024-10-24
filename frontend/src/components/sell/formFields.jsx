@@ -140,7 +140,6 @@ export const FileUploader = ({ label, accept, files, onDrop, onRemove, getRootPr
                                 src={file.url}
                                 alt={`preview ${index}`}
                                 className="object-cover w-full rounded-md"
-                                layout="fill"
                                 objectFit="cover"
                             />
                         ) : (

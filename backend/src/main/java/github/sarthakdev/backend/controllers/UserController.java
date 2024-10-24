@@ -25,17 +25,23 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<?> userSignup(@Validated @RequestBody SignupRequest userDTO) {
         try {
-            System.out.println("\n\n\nReceived new signup request for username: " + userDTO.getUsername());
+            System.out.println("\n\n\nReceived new signup request :- \n" + userDTO.toString() + "\n\n");
             var newUser = userService.signup(userDTO);
             var response = new SignupResponse("User registered successfully.", newUser, true);
-            System.out.println("Final Response : " + response);
+            System.out.println("Final Response :- \n" + response + "\n\n");
             return ResponseEntity.ok(response);
         } catch (UserAlreadyExistsException e) {
-            System.out.println("\n\n\nSignup failed: " + e.getMessage());
+            System.out.println(
+                    "\n\n\nSignup failed." + "\n\nFinal Response :- \n" + e.getMessage() + "\n\nLocalized Message : "
+                            + e.getLocalizedMessage() + "\n\nCause : " + e.getCause() + "\n\n");
+
             return ResponseEntity.badRequest()
                     .body(new SignupResponse(e.getMessage(), null, false));
         } catch (Exception e) {
-            System.out.println("\n\n\nUnexpected error during signup: " + e);
+            System.out.println(
+                    "\n\n\nUnexpected error during signup" + "\n\nFinal Response :- \n" + e.getMessage() + "\n\n"
+                            + "\n\nLocalized Message : "
+                            + e.getLocalizedMessage() + "\n\nCause : " + e.getCause() + "\n\n");
             return ResponseEntity.internalServerError()
                     .body(new SignupResponse("An unexpected error occurred", null, false));
         }

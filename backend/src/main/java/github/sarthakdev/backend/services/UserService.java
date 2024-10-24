@@ -63,23 +63,22 @@ public class UserService {
                     System.out.println(
                             "\n\nWARNING: Attempted to create account with existing username: "
                                     + userDTO.getUsername());
-                    throw new UserAlreadyExistsException("Username already exists.");
+                    throw new UserAlreadyExistsException("Username '" + userDTO.getUsername() + "' already exists.");
                 });
 
         userRepository.findByEmail(userDTO.getEmail())
                 .ifPresent(user -> {
-                    System.out
-                            .println("\n\nWARNING: Attempted to create account with existing email: "
-                                    + userDTO.getEmail());
-                    throw new UserAlreadyExistsException("Email already registered.");
+                    System.out.println("\n\nWARNING: Attempted to create account with existing email: "
+                            + userDTO.getEmail());
+                    throw new UserAlreadyExistsException("Email '" + userDTO.getEmail() + "' is already registered.");
                 });
 
         userRepository.findByPhoneNumber(userDTO.getPhoneNumber())
                 .ifPresent(user -> {
-                    System.out
-                            .println("\n\nWARNING: Attempted to create account with existing phone number: "
-                                    + userDTO.getPhoneNumber());
-                    throw new UserAlreadyExistsException("Phone number already registered.");
+                    System.out.println("\n\nWARNING: Attempted to create account with existing phone number: "
+                            + userDTO.getPhoneNumber());
+                    throw new UserAlreadyExistsException(
+                            "Phone number '" + userDTO.getPhoneNumber() + "' is already registered.");
                 });
     }
 

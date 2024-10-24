@@ -293,7 +293,15 @@ const Buy = () => {
                             <Link href={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit">
                                 <div className="flex flex-col bg-gray-50 rounded-lg shadow-lg overflow-hidden">
                                     <div className="h-48 sm:h-64 md:h-72 bg-slate-300 relative">
-                                        <Image loading="lazy" src={property.image} alt="property first-look" layout="fill" objectFit="cover" className="w-full h-full" />
+                                        <Image
+                                            src={property.image}
+                                            alt="property first-look"
+                                            width={400}
+                                            height={150}
+                                            loading="lazy"
+                                            objectFit="cover"
+                                            className="w-full h-full"
+                                        />
                                         <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
                                             {getTimeSinceAdded(property.dateAdded)}
                                         </span>

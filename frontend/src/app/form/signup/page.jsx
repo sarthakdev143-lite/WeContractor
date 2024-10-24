@@ -247,7 +247,6 @@ const SignUp = () => {
         }
     };
 
-    // Form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -265,33 +264,94 @@ const SignUp = () => {
         let profilePictureUrl = "";
 
         try {
+            // Upload image to Cloudinary if exists
             if (user.profilePicture) {
-                profilePictureUrl = await uploadImageToCloudinary(user.profilePicture);
+                try {
+                    profilePictureUrl = await uploadImageToCloudinary(user.profilePicture);
+                } catch (error) {
+                    console.error("Failed to upload image:", error);
+                    alert("Failed to upload profile picture. Please try again.");
+                    setIsLoading(false);
+                    return;
+                }
             }
 
-            const formData = new FormData();
-            formData.append("username", user.username);
-            formData.append("email", user.email);
-            formData.append("phoneNumber", user.phoneNumber);
-            formData.append("profilePictureUrl", profilePictureUrl);
-            formData.append("password", user.password);
+            // Prepare request data to match SignupRequest DTO
+            const requestData = {
+                username: user.username.trim(),
+                email: user.email.trim(),
+                phoneNumber: user.phoneNumber.trim(),
+                password: user.password,
+                profilePictureUrl: profilePictureUrl || ""
+            };
 
-            const response = await MYAXIOS.post("/api/user/signup", formData, {
-                headers: { "Content-Type": "application/json" },
-            });
+            console.log("Sending signup request:", requestData);
 
-            console.log("API Response :- \n" + response.data);
-            alert(response.data.message);
+            // Make the API call
+            const response = await MYAXIOS.post("/api/user/signup", requestData);
+            console.log("Signup Response:", response.data);
 
-            // Reset form
-            removeProfilePicture();
-            setUser({ username: "", email: "", phoneNumber: "", password: "", profilePicture: null });
-            setErrors({ username: "", email: "", phoneNumber: "", password: "" });
+            // Check for successful response based on SignupResponse structure
+            if (response.data.success) {
+                alert(response.data.message);
+
+                // Reset form
+                setUser({
+                    username: "",
+                    email: "",
+                    phoneNumber: "",
+                    password: "",
+                    profilePicture: null
+                });
+                setErrors({
+                    username: "",
+                    email: "",
+                    phoneNumber: "",
+                    password: ""
+                });
+                removeProfilePicture();
+            } else {
+                throw new Error(response.data.message);
+            }
+
         } catch (error) {
+            console.error("Signup Error:", error);
+
+            // Clean up Cloudinary image if signup failed
             if (profilePictureUrl) {
-                await deleteFromCloudinary(profilePictureUrl.split('/').pop().split('.')[0], "image");
+                try {
+                    await deleteFromCloudinary(
+                        profilePictureUrl.split('/').pop().split('.')[0],
+                        "image"
+                    );
+                } catch (cleanupError) {
+                    console.error("Failed to cleanup uploaded image:", cleanupError);
+                }
             }
-            alert("Sign-up failed!\nReason : " +  error.response ? error.response.data : error.message);
+
+            // Handle UserAlreadyExistsException and other errors
+            if (error.response) {
+                const errorResponse = error.response.data;
+                // console.log("Server Error Response:", errorResponse);
+                const errorMessage = errorResponse.message;
+                
+                alert(errorResponse.message);
+
+                // Match error messages with your backend exceptions
+                if (errorMessage.includes("Username")) {
+                    setErrors(prev => ({ ...prev, username: errorMessage }));
+                } else if (errorMessage.includes("Email")) {
+                    setErrors(prev => ({ ...prev, email: errorMessage }));
+                } else if (errorMessage.includes("Phone number")) {
+                    setErrors(prev => ({ ...prev, phoneNumber: errorMessage }));
+                } else {
+                    alert(`Sign-up failed: ${errorMessage}`);
+                }
+            } else if (error.request) {
+                alert("Network error. Please check your connection and try again.");
+            } else {
+                alert(`Sign-up failed: ${error.message || "Unknown error occurred"}`);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -317,7 +377,6 @@ const SignUp = () => {
                         placeholder="Username"
                         error={errors.username}
                         isLoading={isLoading}
-                        required
                     />
 
                     <FormInput
@@ -328,7 +387,6 @@ const SignUp = () => {
                         placeholder="Email"
                         error={errors.email}
                         isLoading={isLoading}
-                        required
                     />
 
                     <FormInput
@@ -339,7 +397,6 @@ const SignUp = () => {
                         placeholder="Phone Number"
                         error={errors.phoneNumber}
                         isLoading={isLoading}
-                        required
                         minLength={10}
                         maxLength={10}
                     />
@@ -352,7 +409,6 @@ const SignUp = () => {
                         placeholder="Password"
                         error={errors.password}
                         isLoading={isLoading}
-                        required
                         showPasswordToggle={true}
                         showPassword={showPassword}
                         onTogglePassword={() => setShowPassword(!showPassword)}

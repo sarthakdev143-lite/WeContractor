@@ -5,7 +5,7 @@ const ProfilePictureUploader = ({
     onFileChange,
     onRemove,
     DEFAULT_PFP,
-    fileInputRef  
+    fileInputRef
 }) => {
     return (
         <div className="relative w-32 h-32 mx-auto">
@@ -13,8 +13,9 @@ const ProfilePictureUploader = ({
                 src={preview}
                 alt="Profile Preview"
                 className="w-full h-full rounded-full object-cover border border-gray-300"
-                layout="fill"
-                objectFit="cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
             />
             {preview !== DEFAULT_PFP && (
                 <i
