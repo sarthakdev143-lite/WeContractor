@@ -17,6 +17,7 @@
     "react-dom": "19.0.0-rc-69d4b800-20241021",
     "react-dropzone": "^14.2.9",
     "react-easy-crop": "^5.1.0",
+    "react-toastify": "^10.0.6",
     "remixicon": "^4.3.0",
     "sharp": "^0.33.5"
   },

@@ -8,15 +8,64 @@ import ImageCropModal from "../../../components/auth/ImageCropModal";
 import FormInput from "../../../components/auth/FormInput";
 import { validators } from "../../../components/sell/utils";
 import { useImageCrop } from "../../../components/hooks/useImageCrop";
+import { ToastContainer } from 'react-toastify';
+import { notify } from '../../../components/notifications';
+import 'react-toastify/dist/ReactToastify.css';
 
 const DEFAULT_PFP = "/default-avatar.webp";
+
+
+// Error handling utility functions
+const handleValidationErrors = (errorData, setErrors) => {
+    const newErrors = {};
+
+    // Handle array of errors
+    if (Array.isArray(errorData.errors)) {
+        errorData.errors.forEach(error => {
+            if (error.field) {
+                newErrors[error.field] = error.message;
+                notify.error(`${error.field}: ${error.message}`);
+            }
+        });
+    }
+    // Handle object of errors
+    else if (errorData.errors && typeof errorData.errors === 'object') {
+        Object.entries(errorData.errors).forEach(([field, message]) => {
+            newErrors[field] = message;
+            notify.error(`${field}: ${message}`);
+        });
+    }
+    // Handle single error message
+    else if (errorData.message) {
+        const field = determineErrorField(errorData.message);
+        if (field) {
+            newErrors[field] = errorData.message;
+        }
+        notify.error(errorData.message);
+    }
+
+    setErrors(prev => ({
+        ...prev,
+        ...newErrors
+    }));
+};
+
+const determineErrorField = (errorMessage) => {
+    const errorMessage_lower = errorMessage.toLowerCase();
+    if (errorMessage_lower.includes('username')) return 'username';
+    if (errorMessage_lower.includes('email')) return 'email';
+    if (errorMessage_lower.includes('phone')) return 'phoneNumber';
+    if (errorMessage_lower.includes('password')) return 'password';
+    return null;
+};
+
 const SignUp = () => {
     // State management
     const [user, setUser] = useState({
         username: "",
         email: "",
         phoneNumber: "",
-        profilePicture: null,
+        profilePicture: "",
         password: "",
     });
 
@@ -150,6 +199,7 @@ const SignUp = () => {
         }
     };
 
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         console.log("File selected:", file);
@@ -157,14 +207,14 @@ const SignUp = () => {
         if (file) {
             // Validate file size (e.g., max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                alert("File size should not exceed 5MB");
+                notify.warning("File size should not exceed 5MB");
                 resetImageStates();
                 return;
             }
 
             // Validate file type
             if (!file.type.startsWith('image/')) {
-                alert("Please upload an image file");
+                notify.error("Please upload an image file");
                 resetImageStates();
                 return;
             }
@@ -203,7 +253,7 @@ const SignUp = () => {
             }
         } catch (error) {
             console.error("Error saving cropped image:", error);
-            alert("Failed to process the image. Please try again.");
+            notify("Failed to process the image. Please try again.");
         } finally {
             setIsModalOpen(false);
         }
@@ -251,12 +301,12 @@ const SignUp = () => {
         e.preventDefault();
 
         if (!cloudinaryConfig) {
-            alert("Configuration loading... Please try again.");
+            notify.warning("Configuration loading... Please try again.");
             return;
         }
 
         if (!isFormValid()) {
-            alert("Please fix all validation errors before submitting.");
+            notify.error("Please fix all validation errors before submitting.");
             return;
         }
 
@@ -270,48 +320,49 @@ const SignUp = () => {
                     profilePictureUrl = await uploadImageToCloudinary(user.profilePicture);
                 } catch (error) {
                     console.error("Failed to upload image:", error);
-                    alert("Failed to upload profile picture. Please try again.");
+                    notify.error("Failed to upload profile picture. Please try again.");
                     setIsLoading(false);
                     return;
                 }
             }
 
-            // Prepare request data to match SignupRequest DTO
             const requestData = {
-                username: user.username.trim(),
-                email: user.email.trim(),
-                phoneNumber: user.phoneNumber.trim(),
-                password: user.password,
-                profilePictureUrl: profilePictureUrl || ""
+                profilePicture: profilePictureUrl || "",
+                username: user.username,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                password: user.password
             };
 
-            console.log("Sending signup request:", requestData);
-
-            // Make the API call
-            const response = await MYAXIOS.post("/api/user/signup", requestData);
-            console.log("Signup Response:", response.data);
-
-            // Check for successful response based on SignupResponse structure
-            if (response.data.success) {
-                alert(response.data.message);
-
-                // Reset form
-                setUser({
-                    username: "",
-                    email: "",
-                    phoneNumber: "",
-                    password: "",
-                    profilePicture: null
+            console.log("Request Data:", JSON.stringify(requestData, null, 2));
+            try {
+                const response = await MYAXIOS.post("/api/user/signup", requestData, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
-                setErrors({
-                    username: "",
-                    email: "",
-                    phoneNumber: "",
-                    password: ""
-                });
-                removeProfilePicture();
-            } else {
-                throw new Error(response.data.message);
+
+                if (response.data.success) {
+                    notify.success(response.data.message || "Sign up successful!");
+
+                    // Reset form
+                    setUser({ username: "", email: "", phoneNumber: "", password: "", profilePicture: "" });
+                    setErrors({ username: "", email: "", phoneNumber: "", password: "" });
+                    removeProfilePicture();
+                } else {
+                    // Handle "successful" request with error in response data
+                    handleValidationErrors(response.data, setErrors);
+                }
+
+            } catch (error) {
+                if (error.response) {
+                    // Log detailed error information
+                    console.log("Error Status:", error.response.status);
+                    console.log("Error Headers:", error.response.headers);
+                    console.log("Error Data:", error.response.data);
+                    console.log("Request Data:", error.response.config.data);
+                }
+                throw error;
             }
 
         } catch (error) {
@@ -329,28 +380,58 @@ const SignUp = () => {
                 }
             }
 
-            // Handle UserAlreadyExistsException and other errors
+            // Handle different types of errors
             if (error.response) {
-                const errorResponse = error.response.data;
-                // console.log("Server Error Response:", errorResponse);
-                const errorMessage = errorResponse.message;
-                
-                alert(errorResponse.message);
+                const status = error.response.status;
+                const errorData = error.response.data;
 
-                // Match error messages with your backend exceptions
-                if (errorMessage.includes("Username")) {
-                    setErrors(prev => ({ ...prev, username: errorMessage }));
-                } else if (errorMessage.includes("Email")) {
-                    setErrors(prev => ({ ...prev, email: errorMessage }));
-                } else if (errorMessage.includes("Phone number")) {
-                    setErrors(prev => ({ ...prev, phoneNumber: errorMessage }));
-                } else {
-                    alert(`Sign-up failed: ${errorMessage}`);
+                console.log("Handling Error For Code : " + status + " & data : " + errorData);
+
+                switch (status) {
+                    case 400:
+                        // Bad Request - Validation errors
+                        handleValidationErrors(errorData, setErrors);
+                        break;
+
+                    case 401:
+                        // Unauthorized
+                        notify.error("Authentication failed. Please try again.");
+                        break;
+
+                    case 403:
+                        // Forbidden
+                        notify.error("You don't have permission to perform this action.");
+                        break;
+
+                    case 409:
+                        // Conflict - Duplicate entry
+                        handleValidationErrors(errorData, setErrors);
+                        break;
+
+                    case 422:
+                        // Unprocessable Entity - Validation errors
+                        handleValidationErrors(errorData, setErrors);
+                        break;
+
+                    case 429:
+                        // Too Many Requests
+                        notify.error("Too many attempts. Please try again later.");
+                        break;
+
+                    case 500:
+                        // Server Error
+                        notify.error("Server error. Please try again later.");
+                        break;
+
+                    default:
+                        notify.error(errorData.message || "An unexpected error occurred. Please try again.");
                 }
             } else if (error.request) {
-                alert("Network error. Please check your connection and try again.");
+                // Network Error
+                notify.error("Network error. Please check your connection and try again.");
             } else {
-                alert(`Sign-up failed: ${error.message || "Unknown error occurred"}`);
+                // Other Errors
+                notify.error(`Sign-up failed: ${error.message || "Unknown error occurred"}`);
             }
         } finally {
             setIsLoading(false);
@@ -442,6 +523,18 @@ const SignUp = () => {
                 onCropComplete={handleCropComplete}
                 onClose={handleModalClose}
                 onSave={handleCropSave}
+            />
+            <ToastContainer
+                position="top-right"
+                autoClose={10000}
+                limit={3}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
             />
         </section>
     );
