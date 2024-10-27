@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 const Buy = () => {
     const [properties, setProperties] = useState([
@@ -40,9 +40,24 @@ const Buy = () => {
     const [plotSizeRange, setPlotSizeRange] = useState([minPlotSize, maxPlotSize]);
     const [toggleFilters, setToggleFilters] = useState(false);
 
+    // Memoize filterProperties to prevent recreation on every render
+    const filterProperties = useCallback(() => {
+        const filtered = properties.filter(
+            (property) =>
+                (property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    property.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
+                property.price >= priceRange[0] &&
+                property.price <= priceRange[1] &&
+                (property.length * property.breadth) >= plotSizeRange[0] &&
+                (property.length * property.breadth) <= plotSizeRange[1]
+        );
+        setFilteredProperties(filtered);
+    }, [searchQuery, priceRange, plotSizeRange, properties]);
+
+    // Update effect with memoized filterProperties in dependency array
     useEffect(() => {
         filterProperties();
-    }, [searchQuery, priceRange, plotSizeRange, properties]);
+    }, [filterProperties]);
 
     useEffect(() => {
         setPriceRange([minPrice, maxPrice]);
@@ -93,18 +108,18 @@ const Buy = () => {
         setSearchQuery(e.target.value);
     };
 
-    const filterProperties = () => {
-        const filtered = properties.filter(
-            (property) =>
-                (property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    property.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
-                property.price >= priceRange[0] &&
-                property.price <= priceRange[1] &&
-                (property.length * property.breadth) >= plotSizeRange[0] &&
-                (property.length * property.breadth) <= plotSizeRange[1]
-        );
-        setFilteredProperties(filtered);
-    };
+    // const filterProperties = () => {
+    //     const filtered = properties.filter(
+    //         (property) =>
+    //             (property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //                 property.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    //             property.price >= priceRange[0] &&
+    //             property.price <= priceRange[1] &&
+    //             (property.length * property.breadth) >= plotSizeRange[0] &&
+    //             (property.length * property.breadth) <= plotSizeRange[1]
+    //     );
+    //     setFilteredProperties(filtered);
+    // };
 
     const handleThumbMove = (index, clientX, rangeState, setRangeState, minValue, maxValue, sliderRef) => {
         const sliderBounds = sliderRef.current.getBoundingClientRect();
