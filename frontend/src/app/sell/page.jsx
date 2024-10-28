@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { fieldConfig, plotTypes, amenitiesList } from '../../components/sell/constants.js';
 import { FormField, PlotTypeSelector, AmenitiesSelector, TagInput, FileUploader, SubmitButton } from '../../components/sell/formFields.jsx';
-import { handleChange, handleAmenityToggle, handleTagInput, removeTag, onDrop, removeFile, onRemove } from '../../components/sell/handlers.js';
+import { handleChange, handleAmenityToggle, handleTagInput, removeTag, onDrop, onRemove } from '../../components/sell/handlers.js';
 import { validateForm, formatIndianCurrency } from '../../components/sell/utils.js';
 import { StatusMessage } from '../../components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '../../components/Helper.js';

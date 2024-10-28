@@ -108,7 +108,7 @@ export const TagInput = ({ tags, onKeyDown, onRemove }) => (
 );
 
 
-export const FileUploader = ({ label, accept, files, onDrop, onRemove, getRootProps, getInputProps, iconClass, acceptedFormats }) => {
+export const FileUploader = ({ label, files, onRemove, getRootProps, getInputProps, iconClass, acceptedFormats }) => {
     const fileType = label.toLowerCase().replace(/s$/, ''); // This will be either 'image' or 'video
     
     return (
