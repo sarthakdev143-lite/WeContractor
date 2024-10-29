@@ -1,13 +1,13 @@
-package github.sarthakdev.backend.controllers;
+package github.sarthakdev.backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import github.sarthakdev.backend.dto.SignupResponse;
+import github.sarthakdev.backend.exception.UserAlreadyExistsException;
+import github.sarthakdev.backend.service.UserService;
 import github.sarthakdev.backend.dto.SignupRequest;
-import github.sarthakdev.backend.services.UserService;
-import github.sarthakdev.backend.exceptions.UserAlreadyExistsException;
 
 @RestController
 @RequestMapping("/api/user")

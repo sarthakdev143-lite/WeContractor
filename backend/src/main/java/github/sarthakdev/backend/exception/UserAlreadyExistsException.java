@@ -1,4 +1,4 @@
-package github.sarthakdev.backend.exceptions;
+package github.sarthakdev.backend.exception;
 
 public class UserAlreadyExistsException extends RuntimeException {
     public UserAlreadyExistsException(String message) {

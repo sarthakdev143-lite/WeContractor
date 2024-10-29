@@ -1,6 +1,6 @@
 package github.sarthakdev.backend.dto;
 
-import github.sarthakdev.backend.beans.User;
+import github.sarthakdev.backend.bean.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

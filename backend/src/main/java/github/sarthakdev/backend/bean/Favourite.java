@@ -1,8 +1,6 @@
-package github.sarthakdev.backend.beans;
+package github.sarthakdev.backend.bean;
 
-import java.util.List;
-import java.util.Date;
-
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,20 +12,23 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Document(collection = "roles")
+import java.util.Date;
+
+@Document(collection = "favourites")
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Role {
+public class Favourite {
     @Id
-    private String id;
-
-    private String name;
+    private ObjectId id;
 
     @DBRef
-    private List<User> users;
+    private User user;
+
+    @DBRef
+    private Plot plot;
 
     @CreatedDate
     private Date createdAt;

@@ -1,4 +1,4 @@
-package github.sarthakdev.backend.services;
+package github.sarthakdev.backend.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import github.sarthakdev.backend.beans.Role;
-import github.sarthakdev.backend.beans.User;
+import github.sarthakdev.backend.bean.Role;
+import github.sarthakdev.backend.bean.User;
 import github.sarthakdev.backend.dto.SignupRequest;
-import github.sarthakdev.backend.exceptions.UserAlreadyExistsException;
-import github.sarthakdev.backend.repositories.RoleRepository;
-import github.sarthakdev.backend.repositories.UserRepository;
+import github.sarthakdev.backend.exception.UserAlreadyExistsException;
+import github.sarthakdev.backend.repository.RoleRepository;
+import github.sarthakdev.backend.repository.UserRepository;
 import github.sarthakdev.backend.security.TbConstants;
 
 @Service
