@@ -14,7 +14,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const DEFAULT_PFP = "/default-avatar.webp";
 
-
 // Error handling utility functions
 const handleValidationErrors = (errorData, setErrors) => {
     const newErrors = {};
@@ -336,14 +335,14 @@ const SignUp = () => {
 
             console.log("Request Data:", JSON.stringify(requestData, null, 2));
             try {
-                const response = await MYAXIOS.post("/api/user/signup", requestData, {
+                const response = await MYAXIOS.post("/api/auth/signup", requestData, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
 
                 if (response.data.success) {
-                    notify.success(response.data.message || "Sign up successful!");
+                    notify.success(response.data.message || "Email verification link sent!");
 
                     // Reset form
                     setUser({ username: "", email: "", phoneNumber: "", password: "", profilePicture: "" });

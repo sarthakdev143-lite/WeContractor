@@ -1,4 +1,4 @@
-package github.sarthakdev.backend.bean;
+package github.sarthakdev.backend.model;
 
 import java.time.Instant;
 import java.util.List;
@@ -38,6 +38,7 @@ public class User {
 
     private String status;
     private Boolean verified = false;
+    private Boolean enabled = false;
     private String profilePictureUrl;
 
     @Indexed(unique = true)

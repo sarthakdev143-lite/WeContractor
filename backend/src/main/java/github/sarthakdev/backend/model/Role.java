@@ -1,4 +1,4 @@
-package github.sarthakdev.backend.bean;
+package github.sarthakdev.backend.model;
 
 import java.util.List;
 import java.util.Date;

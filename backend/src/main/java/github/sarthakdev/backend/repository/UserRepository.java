@@ -6,15 +6,14 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import github.sarthakdev.backend.bean.Role;
-import github.sarthakdev.backend.bean.User;
+import github.sarthakdev.backend.model.User;
 
 @Repository
 public interface UserRepository extends MongoRepository<User, ObjectId> {
 
-    Optional<Role> findByUsername(String username);
+    Optional<User> findByUsername(String username);
 
-    Optional<Role> findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
-    Optional<Role> findByPhoneNumber(String phoneNumber);
+    Optional<User> findByPhoneNumber(String phoneNumber);
 }

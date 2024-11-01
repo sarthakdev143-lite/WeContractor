@@ -1,10 +1,8 @@
-package github.sarthakdev.backend.bean;
-
-import java.time.Instant;
+package github.sarthakdev.backend.model;
 
 import org.bson.types.ObjectId;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
@@ -14,29 +12,24 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Document(collection = "transactions")
+import java.util.Date;
+
+@Document(collection = "favourites")
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Transaction {
+public class Favourite {
     @Id
     private ObjectId id;
 
     @DBRef
+    private User user;
+
+    @DBRef
     private Plot plot;
 
-    @DBRef
-    private User buyer;
-
-    @DBRef
-    private User seller;
-
-    private Double salePrice;
-
-    private String transactionType;
-
     @CreatedDate
-    private Instant transactionDate;
+    private Date createdAt;
 }

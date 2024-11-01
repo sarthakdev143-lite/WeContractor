@@ -1,6 +1,10 @@
-import Link from 'next/link'
+'use client'
 
-const page = () => {
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation';
+import EmailVerification from '../components/EmailVerification';
+
+const Home = () => {
   return (
     <section className="flex flex-wrap gap-20 h-fit translate-y-12 p-6 transform justify-center items-center">
       <Link href="/buy"
@@ -14,7 +18,15 @@ const page = () => {
         Sell
       </Link>
     </section>
-  )
+  );
+}
+
+const page = () => {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+
+  if (!token) return <Home />;
+  return <EmailVerification token={token} />
 }
 
 export default page

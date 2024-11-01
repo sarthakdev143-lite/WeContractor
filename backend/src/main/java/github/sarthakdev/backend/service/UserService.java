@@ -1,62 +1,141 @@
 package github.sarthakdev.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import github.sarthakdev.backend.bean.Role;
-import github.sarthakdev.backend.bean.User;
+import github.sarthakdev.backend.dto.LoginRequest;
 import github.sarthakdev.backend.dto.SignupRequest;
+import github.sarthakdev.backend.dto.SignupResponse;
 import github.sarthakdev.backend.exception.UserAlreadyExistsException;
+import github.sarthakdev.backend.model.Role;
+import github.sarthakdev.backend.model.User;
+import github.sarthakdev.backend.model.VerificationToken;
 import github.sarthakdev.backend.repository.RoleRepository;
 import github.sarthakdev.backend.repository.UserRepository;
+import github.sarthakdev.backend.repository.VerificationTokenRepository;
+import github.sarthakdev.backend.security.JwtService;
 import github.sarthakdev.backend.security.TbConstants;
+import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @Validated
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final VerificationTokenRepository tokenRepository;
+    private final EmailService emailService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Autowired
-    public UserService(UserRepository userRepository,
-            RoleRepository roleRepository,
-            BCryptPasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
+    private AuthenticationManager authManager;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Transactional
+    public SignupResponse signup(@Validated SignupRequest userDTO) {
+        validateNewUser(userDTO);
+
+        User tempUser = mapToUser(userDTO);
+        tempUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        tempUser.setEnabled(false);
+
+        // Assign roles immediately after user creation
+        List<Role> roles = determineUserRoles();
+        tempUser.setRoles(roles);
+
+        // Create verification token
+        VerificationToken verificationToken = new VerificationToken(tempUser);
+
+        // Save temporary user and token
+        User savedTempUser = userRepository.save(tempUser);
+        tokenRepository.save(verificationToken);
+
+        // Send verification email
+        try {
+            emailService.sendVerificationEmail(tempUser.getEmail(), verificationToken.getToken());
+            return new SignupResponse("Verification email sent. Please check your inbox.", savedTempUser, true);
+        } catch (MessagingException e) {
+            // Cleanup if email sending fails
+            userRepository.delete(savedTempUser);
+            tokenRepository.delete(verificationToken);
+            throw new RuntimeException("Failed to send verification email", e);
+        }
     }
 
     @Transactional
-    public User signup(@Validated SignupRequest userDTO) {
-        System.out.println("\n\nProcessing signup request for user: " + userDTO.getUsername());
+    public String verifyEmail(String token) {
+        System.out.println("\n\nReceived new verification request :- \n" + token + "\n\n");
+        VerificationToken verificationToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> {
+                    System.out.println("\n\nVerification token not found.");
+                    throw new IllegalArgumentException("Invalid verification token");
+                });
 
-        // Check for existing users with same username or email
-        validateNewUser(userDTO);
+        if (verificationToken.getConfirmedAt() != null) {
+            System.out.println("\n\nVerification token already confirmed.");
+            throw new IllegalStateException("Email already verified");
+        }
 
-        User newUser = mapToUser(userDTO);
-        newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        System.out
-                .println("\n\nUser's Password is Encoded Successfully to : " + '"' + newUser.getPassword() + '"');
+        LocalDateTime expiredAt = verificationToken.getExpiresAt();
+        if (expiredAt.isBefore(LocalDateTime.now())) {
+            System.out.println("\n\nVerification token expired.");
+            throw new IllegalStateException("Token expired");
+        }
 
-        List<Role> roles = determineUserRoles();
-        newUser.setRoles(roles);
-        System.out.println("\n\nRoles assigned to user Successfully : " + newUser.getRoles());
+        verificationToken.setConfirmedAt(LocalDateTime.now());
+        User user = verificationToken.getTempUser();
+        user.setEnabled(true);
+        System.out.println("\n\nEmail verified Successfully..!!\n\n");
 
-        System.out.println("\n\nAttempting To Save User To DB...");
-        User savedUser = userRepository.save(newUser);
-        System.out.println("\n\nUser successfully registered: " + savedUser.getUsername() + "\n");
-        return savedUser;
+        // Roles are already assigned, just save the updated user status
+        userRepository.save(user);
+        tokenRepository.save(verificationToken);
+
+        return "Email verified successfully";
     }
 
+    private List<Role> determineUserRoles() {
+        List<Role> roles = new ArrayList<>();
+
+        if (userRepository.count() == 0) {
+            roles.addAll(createInitialRoles());
+            System.out.println("\n\nFirst User Detected! Created Roles for Him/Her.");
+        } else {
+            Optional<Role> userRole = Optional.of(roleRepository.findByName(TbConstants.Roles.USER));
+            if (userRole.isEmpty()) {
+                // If USER role doesn't exist, create it
+                Role newUserRole = new Role();
+                newUserRole.setId(TbConstants.Roles.USER);
+                newUserRole.setName(TbConstants.Roles.USER);
+                roles.add(roleRepository.save(newUserRole));
+                System.out.println("\n\nCreated and assigned new USER role");
+            } else {
+                roles.add(userRole.get());
+                System.out.println("\n\nAssigned existing USER role to new user");
+            }
+        }
+
+        return roles;
+    }
+
+    // Rest of the methods remain unchanged...
     private void validateNewUser(SignupRequest userDTO) {
         userRepository.findByUsername(userDTO.getUsername())
                 .ifPresent(user -> {
@@ -80,25 +159,6 @@ public class UserService {
                     throw new UserAlreadyExistsException(
                             "Phone number '" + userDTO.getPhoneNumber() + "' is already registered.");
                 });
-    }
-
-    private List<Role> determineUserRoles() {
-        List<Role> roles = new ArrayList<>();
-
-        if (userRepository.count() == 0) {
-            roles.addAll(createInitialRoles());
-            System.out.println("\n\nFirst User Detected! Created Roles for Him/Her.");
-        } else {
-            Optional<Role> userRole = Optional.of(roleRepository.findByName(TbConstants.Roles.USER));
-            if (userRole.isEmpty()) {
-                System.out.println("\n\nERROR: Required USER role not found in database");
-                throw new IllegalStateException("Required USER role not found");
-            }
-            roles.add(userRole.get());
-            System.out.println("\n\nAssigned USER role to new user");
-        }
-
-        return roles;
     }
 
     private List<Role> createInitialRoles() {
@@ -125,5 +185,20 @@ public class UserService {
         user.setPhoneNumber(userDTO.getPhoneNumber());
         user.setProfilePictureUrl(userDTO.getProfilePictureUrl());
         return user;
+    }
+
+    public String verifyUser(LoginRequest userDTO) {
+        Authentication authentication = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        userDTO.getUsernameOrEmail(),
+                        userDTO.getPassword()));
+
+        if (authentication.isAuthenticated()) {
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(userDTO.getUsernameOrEmail());
+            System.out.println("\n\nUser details loaded successfully: " + userDetails.getUsername() + "\n");
+            return jwtService.generateToken(userDetails);
+        }
+
+        return "failed to generate token";
     }
 }

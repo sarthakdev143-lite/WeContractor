@@ -4,7 +4,7 @@ export const notify = {
     success: (message) => {
         toast.success(message, {
             position: "top-right",
-            autoClose: 3500,
+            autoClose: false,
             closeOnClick: true,
             draggable: true,
             style: {
@@ -17,7 +17,7 @@ export const notify = {
     error: (message) => {
         toast.error(message, {
             position: "top-right",
-            autoClose: 8000,
+            autoClose: 10000,
             closeOnClick: true,
             draggable: true,
             style: {
@@ -30,7 +30,7 @@ export const notify = {
     warning: (message) => {
         toast.warning(message, {
             position: "top-right",
-            autoClose: 6000,
+            autoClose: 7000,
             closeOnClick: true,
             draggable: true,
             style: {
@@ -43,7 +43,7 @@ export const notify = {
     info: (message) => {
         toast.info(message, {
             position: "top-right",
-            autoClose: 5000,
+            autoClose: 7000,
             closeOnClick: true,
             draggable: true,
             style: {
