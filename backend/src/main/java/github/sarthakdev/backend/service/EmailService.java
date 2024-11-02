@@ -26,11 +26,12 @@ public class EmailService {
     public void sendVerificationEmail(String to, String token) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+        System.out.println("\n\nToken : " + token + "\nTo : " + to + "\nfrontendUrl : " + frontendUrl + "/?token=" + token +"\n\n\n");
 
         // Create Thymeleaf context and load verification email template
         Context context = new Context();
         context.setVariable("token", token);
-        context.setVariable("frontendUrl", frontendUrl); 
+        context.setVariable("frontendUrl", frontendUrl);
         String body = templateEngine.process("verification-email", context);
 
         helper.setText(body, true);

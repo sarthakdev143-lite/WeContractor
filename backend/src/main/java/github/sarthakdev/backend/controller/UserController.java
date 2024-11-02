@@ -1,6 +1,8 @@
 package github.sarthakdev.backend.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import github.sarthakdev.backend.dto.SignupResponse;
@@ -59,7 +61,6 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> userLogin(@Validated @RequestBody LoginRequest userDTO) {
-        System.out.println("\n\n\nReceived new login request :- \n" + userDTO.toString() + "\n\n");
         String token = userService.verifyUser(userDTO);
         if (token.equals("failed to generate token")) {
             System.out.println("\n\n\nLogin failed." + "\n\nFinal Response :- \n" + token + "\n\n");
@@ -68,5 +69,27 @@ public class UserController {
         var response = new LoginResponse("User logged in successfully.", true, token);
         System.out.println("Final Response :- \n" + response + "\n\n");
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/validate-token")
+    public ResponseEntity<?> validateToken() {
+        try {
+            
+            // Get the authentication object from security context
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            // Check if user is authenticated
+            if (auth != null && auth.isAuthenticated()) {
+                return ResponseEntity.ok()
+                        .body(new ApiResponse(true, "Token is valid", null));
+            }
+
+            return ResponseEntity.status(401)
+                    .body(new ApiResponse(false, "Invalid token", null));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(401)
+                    .body(new ApiResponse(false, "Token validation failed", e.getMessage()));
+        }
     }
 }

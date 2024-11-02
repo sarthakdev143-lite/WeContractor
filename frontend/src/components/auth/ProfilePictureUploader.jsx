@@ -15,7 +15,6 @@ const ProfilePictureUploader = ({
                 className="w-full h-full rounded-full object-cover border border-gray-300"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                priority
             />
             {preview !== DEFAULT_PFP && (
                 <i

@@ -188,17 +188,21 @@ public class UserService {
     }
 
     public String verifyUser(LoginRequest userDTO) {
+        System.out.println("\n\n\nReceived new login request :- \n" + userDTO.toString() + "\n\n");
         Authentication authentication = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        userDTO.getUsernameOrEmail(),
+                        userDTO.getIdentifier(),
                         userDTO.getPassword()));
 
         if (authentication.isAuthenticated()) {
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(userDTO.getUsernameOrEmail());
-            System.out.println("\n\nUser details loaded successfully: " + userDetails.getUsername() + "\n");
+            System.out.println("\n\nUser authenticated successfully: " + userDTO.getIdentifier() + "\n");
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(userDTO.getIdentifier());
+            System.out.println("\n\nUser details loaded successfully: " + userDetails.getUsername()
+                    + "\n\nGenerating Token..\n\n");
             return jwtService.generateToken(userDetails);
         }
 
-        return "failed to generate token";
+        System.out.println("\n\nFailed to Generate Token\n\n");
+        return "Failed to generate token";
     }
 }
