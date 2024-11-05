@@ -22,6 +22,12 @@ export const formatIndianCurrency = (value) => {
 
 // Sign Up Form Validations
 export const validators = {
+    fullName: (value) => {
+        if (value.length < 3) return "Full name should be at least 3 characters";
+        if (value.trim() === '') return "Full name should not be blank";
+        return "";
+    },
+
     username: (username) => {
         if (username.length < 3) return "Username must be at least 3 characters long";
         if (username.length > 20) return "Username cannot exceed 20 characters";

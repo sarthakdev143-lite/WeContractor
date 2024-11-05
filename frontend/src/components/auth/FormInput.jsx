@@ -23,7 +23,7 @@ const FormInput = ({ type, name, value, onChange, placeholder, error, isLoading,
                     disabled={isLoading}
                     required
                 />
-                {type === "password" && showPasswordToggle === true && (
+                {showPasswordToggle === true && (
                     <button
                         type="button"
                         onClick={onTogglePassword}

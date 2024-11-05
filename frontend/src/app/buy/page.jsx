@@ -314,7 +314,6 @@ const Buy = () => {
                                             width={400}
                                             height={150}
                                             loading="lazy"
-                                            objectFit="cover"
                                             className="w-full h-full"
                                         />
                                         <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">

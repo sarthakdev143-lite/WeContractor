@@ -1,17 +1,21 @@
 package github.sarthakdev.backend.dto;
 
-import github.sarthakdev.backend.beans.User;
+import github.sarthakdev.backend.model.User;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
-@Setter
-@Getter
+@Data
 @AllArgsConstructor
-@ToString
 public class SignupResponse {
     private String message;
     private User user;
     private boolean success;
+    private boolean requiresVerification;  
+    
+    public SignupResponse(String message, User user, boolean success) {
+        this.message = message;
+        this.user = user;
+        this.success = success;
+        this.requiresVerification = true;  // Default to true for new implementation
+    }
 }

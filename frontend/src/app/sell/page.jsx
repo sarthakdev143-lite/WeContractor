@@ -8,6 +8,7 @@ import { handleChange, handleAmenityToggle, handleTagInput, removeTag, onDrop, o
 import { validateForm, formatIndianCurrency } from '../../components/sell/utils.js';
 import { StatusMessage } from '../../components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '../../components/Helper.js';
+import withAuth from '../../components/WithAuth.js';
 
 const Sell = () => {
     const [formData, setFormData] = useState({
@@ -147,4 +148,4 @@ const Sell = () => {
     );
 }
 
-export default Sell;
+export default withAuth(Sell);
