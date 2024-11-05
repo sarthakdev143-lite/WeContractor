@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login Notification</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 0;">
+    <div
+        style="max-width: 600px; margin: 40px auto; background-color: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: #4CAF50;">New Login to Your Account</h2>
+        <div style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+            <p>We wanted to let you know that a new login to your account was detected at <span
+                    th:text="${loginTime}">2023-08-01 12:34:56</span>.</p>
+            <p>The login was from the following device:</p>
+            <ul>
+                <li>IP Address: <span th:text="${ipAddress}">123.45.67.89</span></li>
+                <li>User Agent: <span th:text="${userAgent}">Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+                        AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3</span></li>
+            </ul>
+            <p>If this login was not authorized by you, please contact our support team immediately to secure your
+                account.</p>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-top: 20px;">This is an automated notification. Please do not
+            reply to this email.</p>
+        <div style="font-size: 12px; color: #999; text-align: center; margin-top: 30px;">
+            &copy; 2024 <a href="https://github.com/sarthakdev143" target="_blank"
+                style="color: inherit;">Sarthakdev143</a>. All rights reserved.
+        </div>
+        <div class="footer"
+            style="margin-top: 40px; font-size: 14px; color: #aaa; border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
+            Powered by <a href="https://github.com/sarthakdev143" target="_blank"
+                style="color: #4CAF50; text-decoration: none;">Sarthakdev143</a>
+        </div>
+    </div>
+</body>
+
+</html>

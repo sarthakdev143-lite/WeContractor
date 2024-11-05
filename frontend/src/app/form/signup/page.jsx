@@ -14,7 +14,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const DEFAULT_PFP = "/default-avatar.webp";
 
-
 // Error handling utility functions
 const handleValidationErrors = (errorData, setErrors) => {
     const newErrors = {};
@@ -62,14 +61,16 @@ const determineErrorField = (errorMessage) => {
 const SignUp = () => {
     // State management
     const [user, setUser] = useState({
+        fullName: "",
         username: "",
         email: "",
         phoneNumber: "",
-        profilePicture: "",
+        profilePictureUrl: "",
         password: "",
     });
 
     const [errors, setErrors] = useState({
+        fullName: "",
         username: "",
         email: "",
         phoneNumber: "",
@@ -83,6 +84,7 @@ const SignUp = () => {
     const [imageSource, setImageSource] = useState(null);
     const [originalPFPname, setOriginalPFPname] = useState("");
     const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -136,6 +138,7 @@ const SignUp = () => {
     // Form validation
     const isFormValid = () => {
         const newErrors = {
+            fullName: validateField("fullName", user.fullName),
             username: validateField("username", user.username),
             email: validateField("email", user.email),
             phoneNumber: validateField("phoneNumber", user.phoneNumber),
@@ -233,7 +236,7 @@ const SignUp = () => {
     const removeProfilePicture = () => {
         setUser(prev => ({
             ...prev,
-            profilePicture: null,
+            profilePictureUrl: null,
         }));
         setPreview(DEFAULT_PFP);
         resetImageStates();
@@ -248,7 +251,7 @@ const SignUp = () => {
                 setPreview(croppedImageUrl);
                 setUser(prev => ({
                     ...prev,
-                    profilePicture: croppedImage,
+                    profilePictureUrl: croppedImage,
                 }));
             }
         } catch (error) {
@@ -315,9 +318,9 @@ const SignUp = () => {
 
         try {
             // Upload image to Cloudinary if exists
-            if (user.profilePicture) {
+            if (user.profilePictureUrl) {
                 try {
-                    profilePictureUrl = await uploadImageToCloudinary(user.profilePicture);
+                    profilePictureUrl = await uploadImageToCloudinary(user.profilePictureUrl);
                 } catch (error) {
                     console.error("Failed to upload image:", error);
                     notify.error("Failed to upload profile picture. Please try again.");
@@ -327,26 +330,27 @@ const SignUp = () => {
             }
 
             const requestData = {
-                profilePicture: profilePictureUrl || "",
-                username: user.username,
+                fullName: user.fullName,
                 email: user.email,
+                username: user.username,
                 phoneNumber: user.phoneNumber,
+                profilePictureUrl: profilePictureUrl || "",
                 password: user.password
             };
 
             console.log("Request Data:", JSON.stringify(requestData, null, 2));
             try {
-                const response = await MYAXIOS.post("/api/user/signup", requestData, {
+                const response = await MYAXIOS.post("/api/auth/signup", requestData, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
 
                 if (response.data.success) {
-                    notify.success(response.data.message || "Sign up successful!");
+                    notify.success(response.data.message || "Email verification link sent!");
 
                     // Reset form
-                    setUser({ username: "", email: "", phoneNumber: "", password: "", profilePicture: "" });
+                    setUser({ fullName: "", username: "", email: "", phoneNumber: "", password: "", profilePictureUrl: "" });
                     setErrors({ username: "", email: "", phoneNumber: "", password: "" });
                     removeProfilePicture();
                 } else {
@@ -439,7 +443,7 @@ const SignUp = () => {
     };
 
     return (
-        <section className="p-6">
+        <section>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <ProfilePictureUploader
                     preview={preview}
@@ -450,6 +454,16 @@ const SignUp = () => {
                 />
 
                 <div className="space-y-4">
+                    <FormInput
+                        type="text"
+                        name="fullName"
+                        value={user.fullName}
+                        onChange={handleChange}
+                        placeholder="Full Name"
+                        error={errors.fullName}
+                        isLoading={isLoading}
+                    />
+
                     <FormInput
                         type="text"
                         name="username"
@@ -496,20 +510,38 @@ const SignUp = () => {
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={isLoading || Object.values(errors).some(error => error !== "")}
-                    className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                    {isLoading ? (
-                        <>
-                            <i className="ri-loader-4-line animate-spin mr-2" />
-                            Signing Up...
-                        </>
-                    ) : (
-                        'Sign Up'
+                <div className="flex relative items-center gap-2">
+                    <button
+                        type="submit"
+                        disabled={isLoading || Object.values(errors).some(error => error !== "")}
+                        className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                        {isLoading ? (
+                            <>
+                                <i className="ri-loader-4-line animate-spin mr-2" />
+                                Signing Up...
+                            </>
+                        ) : (
+                            'Sign Up'
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        className="text-white hover:text-gray-200 focus:outline-none"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                        onFocus={() => setShowTooltip(true)}
+                        onBlur={() => setShowTooltip(false)}
+                        aria-label="Login information"
+                    >
+                        <i className="ri-information-2-line text-black text-xl cursor-pointer"></i>
+                    </button>
+                    {showTooltip && (
+                        <div className="absolute max-w-48 text-center top-2/3 -right-1/2 -translate-x-1/2 w-64 p-2 mt-2 md:text-sm text-base text-gray-600 bg-white border rounded-lg shadow-2xl">
+                            You will get a verification link on email to signup.
+                        </div>
                     )}
-                </button>
+                </div>
             </form>
             <ImageCropModal
                 isOpen={isModalOpen}

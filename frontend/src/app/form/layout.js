@@ -7,7 +7,7 @@ export default function Layout({ children }) {
     const pathname = usePathname(); // Get the current path
 
     return (
-        <section className="mx-auto rounded-lg shadow-2xl w-full max-w-[26rem] bg-white">
+        <section className="mx-auto rounded-lg shadow-2xl w-full max-w-[26rem] bg-white mb-20">
             <header className="p-6 border-b">
                 <h1 className="text-2xl font-bold">Welcome</h1>
                 <p className="text-slate-600">Signup / Login To Your Account.</p>
