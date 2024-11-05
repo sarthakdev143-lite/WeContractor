@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUtils } from './utils/auth';
-import LoadingSpinner from './LoadingSpinner'; 
+import LoadingSpinner from './LoadingSpinner';
 
 const WithAuth = (WrappedComponent) => {
     return function AuthenticatedComponent(props) {
@@ -20,12 +20,18 @@ const WithAuth = (WrappedComponent) => {
 
                 try {
                     const axiosInstance = AuthUtils.createAuthenticatedAxios();
-                    await axiosInstance.get('/api/validate-token'); 
-                    setIsAuthorized(true);
-                } catch (error) {
-                    if (error.redirect) {
+                    const response = await axiosInstance.get('/api/auth/validate-token');
+
+                    if (response.data.success) {
+                        setIsAuthorized(true);
+                    } else {
+                        AuthUtils.removeToken();
                         router.push('/form/login');
                     }
+                } catch (error) {
+                    console.error('Token validation error:', error);
+                    AuthUtils.removeToken();
+                    router.push('/form/login');
                 } finally {
                     setIsValidating(false);
                 }
@@ -35,7 +41,12 @@ const WithAuth = (WrappedComponent) => {
         }, [router]);
 
         if (isValidating) {
-            return <LoadingSpinner />;
+            return (
+                <LoadingSpinner
+                    type="wave"
+                    text="Verifying your session.."
+                />
+            );
         }
 
         return isAuthorized ? <WrappedComponent {...props} /> : null;

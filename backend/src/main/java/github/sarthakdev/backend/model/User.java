@@ -1,6 +1,7 @@
 package github.sarthakdev.backend.model;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.bson.types.ObjectId;
@@ -22,11 +23,13 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "password")
+@ToString
 public class User {
 
     @Id
     private ObjectId id;
+
+    private String fullName;
 
     @Indexed(unique = true)
     private String username;
@@ -58,4 +61,7 @@ public class User {
 
     @CreatedDate
     private Instant createdAt;
+
+    private int loginAttempts = 0;
+    private LocalDateTime lastLoginAttemptTime;
 }

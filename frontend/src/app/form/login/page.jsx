@@ -8,13 +8,11 @@ import { validators } from "../../../components/sell/utils";
 import { ToastContainer } from 'react-toastify';
 import { notify } from '../../../components/notifications';
 import 'react-toastify/dist/ReactToastify.css';
-import { useRouter } from "next/navigation";
 
 // Error handling utility functions
 const handleValidationErrors = (errorData, setErrors) => {
   const newErrors = {};
 
-  // Handle array of errors
   if (Array.isArray(errorData.errors)) {
     errorData.errors.forEach(error => {
       if (error.field) {
@@ -23,14 +21,12 @@ const handleValidationErrors = (errorData, setErrors) => {
       }
     });
   }
-  // Handle object of errors
   else if (errorData.errors && typeof errorData.errors === 'object') {
     Object.entries(errorData.errors).forEach(([field, message]) => {
       newErrors[field] = message;
       notify.error(`${field}: ${message}`);
     });
   }
-  // Handle single error message
   else if (errorData.message) {
     const field = determineErrorField(errorData.message);
     if (field) {
@@ -53,8 +49,6 @@ const determineErrorField = (errorMessage) => {
 };
 
 const Login = () => {
-  const router = useRouter();
-
   // State management
   const [credentials, setCredentials] = useState({
     identifier: "", // Can be username or email
@@ -68,6 +62,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Form validation helper
@@ -120,22 +115,20 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await MYAXIOS.post("/api/auth/login", credentials);
+      console.log("Trying to Login with credentials :-\n" + JSON.stringify(credentials, null, 2));
+
+      const response = await MYAXIOS.post("/api/auth/initiate-login", {
+        identifier: credentials.identifier,
+        password: credentials.password
+      });
 
       if (response.data.success) {
-        // Store the JWT token
-        AuthUtils.setToken(response.data.token);
+        setEmailSent(true);
+        notify.success("Login verification link has been sent to your email!");
 
-        notify.success(response.data.message || "Login successful!");
-
-        // Redirect to dashboard or home page
-        router.push('/dashboard');
-
-        // Reset form
-        setCredentials({ identifier: "", password: "" });
-        setErrors({ identifier: "", password: "" });
+        // Clear password but keep identifier for reference
+        setCredentials(prev => ({ ...prev, password: "" }));
       } else {
-        // Handle "successful" request with error in response data
         handleValidationErrors(response.data, setErrors);
       }
     } catch (error) {
@@ -147,7 +140,6 @@ const Login = () => {
 
         switch (status) {
           case 400:
-            // Bad Request - Validation errors
             handleValidationErrors(errorData, setErrors);
             break;
           case 401:
@@ -166,9 +158,10 @@ const Login = () => {
             notify.error(errorData.message || "An unexpected error occurred.");
         }
       } else if (error.request) {
+        console.log("Error Request : " + error.request);
         notify.error("Network error. Please check your connection.");
       } else {
-        notify.error(`Login failed: ${error.message || "Unknown error occurred"}`);
+        notify.error("Login failed. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -186,53 +179,65 @@ const Login = () => {
           placeholder="Username / Email"
           error={errors.identifier}
           isLoading={isLoading}
+          disabled={emailSent}
         />
 
-        <FormInput
-          type={showPassword ? "text" : "password"}
-          name="password"
-          value={credentials.password}
-          onChange={handleChange}
-          placeholder="Password"
-          error={errors.password}
-          isLoading={isLoading}
-          showPasswordToggle={true}
-          showPassword={showPassword}
-          onTogglePassword={() => setShowPassword(!showPassword)}
-        />
+        {!emailSent && (
+          <FormInput
+            type={showPassword ? "text" : "password"}
+            name="password"
+            value={credentials.password}
+            onChange={handleChange}
+            placeholder="Password"
+            error={errors.password}
+            isLoading={isLoading}
+            showPasswordToggle={true}
+            showPassword={showPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
+          />
+        )}
 
-        <div className="flex relative items-center gap-2">
-          <button
-            type="submit"
-            disabled={isLoading || Object.values(errors).some(error => error !== "")}
-            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <i className="ri-loader-4-line animate-spin mr-2" />
-                Sending Login Link...
-              </>
-            ) : (
-              'Send Login Link'
+        {emailSent ? (
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <p className="text-blue-600 mb-2">Check your email!</p>
+            <p className="text-sm text-gray-600">
+              We've sent a verification link to {credentials.identifier}
+            </p>
+          </div>
+        ) : (
+          <div className="flex relative items-center gap-2">
+            <button
+              type="submit"
+              disabled={isLoading || Object.values(errors).some(error => error !== "")}
+              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              {isLoading ? (
+                <>
+                  <i className="ri-loader-4-line animate-spin mr-2" />
+                  Sending Login Link...
+                </>
+              ) : (
+                'Send Login Link'
+              )}
+            </button>
+            <button
+              type="button"
+              className="text-white hover:text-gray-200 focus:outline-none"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              onFocus={() => setShowTooltip(true)}
+              onBlur={() => setShowTooltip(false)}
+              aria-label="Login information"
+            >
+              <i className="ri-information-2-line text-black text-xl cursor-pointer"></i>
+            </button>
+            {showTooltip && (
+              <div className="absolute max-w-48 text-center top-2/3 -right-1/2 -translate-x-1/2 w-64 p-2 mt-2 md:text-sm text-base text-gray-600 bg-white border rounded-lg shadow-2xl">
+                A secure login link will be sent to your email address.
+              </div>
             )}
-          </button>
-          <button
-            type="button"
-            className="text-white hover:text-gray-200 focus:outline-none"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-            onFocus={() => setShowTooltip(true)}
-            onBlur={() => setShowTooltip(false)}
-            aria-label="Login information"
-          >
-            <i className="ri-information-2-line text-black text-xl cursor-pointer"></i>
-          </button>
-          {showTooltip && (
-            <div className="absolute max-w-48 text-center top-2/3 -right-1/2 -translate-x-1/2 w-64 p-2 mt-2 md:text-sm text-base text-gray-600 bg-white border rounded-lg shadow-2xl">
-              You will get a special link on email to login.
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </form>
       <ToastContainer
         position="top-right"

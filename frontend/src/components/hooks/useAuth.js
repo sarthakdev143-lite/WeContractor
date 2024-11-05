@@ -21,7 +21,7 @@ export const useAuth = () => {
     const login = useCallback(async (token) => {
         AuthUtils.setToken(token);
         setIsLoggedIn(true);
-        router.push('/dashboard');
+        router.push('/user-dashboard');
     }, [router]);
 
     const logout = useCallback(() => {

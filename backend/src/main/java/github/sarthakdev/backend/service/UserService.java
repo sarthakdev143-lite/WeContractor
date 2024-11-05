@@ -1,27 +1,33 @@
 package github.sarthakdev.backend.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import javax.security.auth.login.AccountLockedException;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import github.sarthakdev.backend.dto.LoginRequest;
+import github.sarthakdev.backend.dto.SecureLoginRequest;
 import github.sarthakdev.backend.dto.SignupRequest;
 import github.sarthakdev.backend.dto.SignupResponse;
+import github.sarthakdev.backend.dto.UserDashboardResponse;
 import github.sarthakdev.backend.exception.UserAlreadyExistsException;
+import github.sarthakdev.backend.model.LoginVerificationToken;
 import github.sarthakdev.backend.model.Role;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.model.VerificationToken;
+import github.sarthakdev.backend.repository.LoginVerificationTokenRepository;
 import github.sarthakdev.backend.repository.RoleRepository;
 import github.sarthakdev.backend.repository.UserRepository;
 import github.sarthakdev.backend.repository.VerificationTokenRepository;
@@ -41,12 +47,12 @@ public class UserService {
     private final VerificationTokenRepository tokenRepository;
     private final EmailService emailService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final JwtService jwtService;
+    private final LoginVerificationTokenRepository loginVerificationTokenRepository;
+    private final LoginAttemptService loginAttemptService;
 
-    @Autowired
-    private AuthenticationManager authManager;
-
-    @Autowired
-    private JwtService jwtService;
+    @Value("${FRONTEND_URL:http://localhost:3000}")
+    private String frontendUrl;
 
     @Transactional
     public SignupResponse signup(@Validated SignupRequest userDTO) {
@@ -57,7 +63,7 @@ public class UserService {
         tempUser.setEnabled(false);
 
         // Assign roles immediately after user creation
-        List<Role> roles = determineUserRoles();
+        List<Role> roles = determineUserRoles(tempUser);
         tempUser.setRoles(roles);
 
         // Create verification token
@@ -107,15 +113,122 @@ public class UserService {
         // Roles are already assigned, just save the updated user status
         userRepository.save(user);
         tokenRepository.save(verificationToken);
+        try {
+            emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
 
         return "Email verified successfully";
     }
 
-    private List<Role> determineUserRoles() {
+    public String initiateLogin(SecureLoginRequest request, String ipAddress, String userAgent)
+            throws MessagingException {
+        System.out.println("Initiating Login for : " + request + "\n\n");
+        User user = userRepository.findByEmail(request.getIdentifier())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        // Check if account is locked
+        try {
+            loginAttemptService.checkLoginAttempts(user);
+        } catch (AccountLockedException e) {
+            e.printStackTrace();
+        }
+
+        if (!user.getEnabled()) {
+            throw new RuntimeException("Account not verified");
+        }
+
+        // Verify password first
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            loginAttemptService.recordFailedAttempt(user);
+            userRepository.save(user);
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        // Generate unique login token
+        String token = UUID.randomUUID().toString();
+
+        // Store hashed password attempt with token
+        String passwordHash = passwordEncoder.encode(request.getPassword());
+        LoginVerificationToken loginToken = new LoginVerificationToken(
+                token, request.getIdentifier(), passwordHash, ipAddress, userAgent);
+
+        // Remove any existing unconfirmed tokens for this user
+        loginVerificationTokenRepository.findByEmail(request.getIdentifier())
+                .ifPresent(loginVerificationTokenRepository::delete);
+
+        // Save new token
+        loginVerificationTokenRepository.save(loginToken);
+
+        // Generate login link
+        String loginLink = frontendUrl + "/form/verify-login?token=" + token;
+
+        // Send email with login link
+        try {
+            emailService.sendLoginLink(request.getIdentifier(), loginLink);
+            return "Login verification link sent to your email";
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send login verification email", e);
+        }
+    }
+
+    @Transactional
+    public String verifyLoginToken(String token, String ipAddress, String userAgent) {
+        LoginVerificationToken loginToken = loginVerificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid login token"));
+
+        // Validate token
+        if (loginToken.getConfirmedAt() != null) {
+            throw new IllegalStateException("Token already used");
+        }
+
+        if (loginToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("Token expired");
+        }
+
+        // Verify IP and User Agent for additional security
+        if (!loginToken.getIpAddress().equals(ipAddress) ||
+                !loginToken.getUserAgent().equals(userAgent)) {
+            loginToken.setAttempts(loginToken.getAttempts() + 1);
+            loginVerificationTokenRepository.save(loginToken);
+            throw new SecurityException("Security verification failed");
+        }
+
+        // Mark token as confirmed
+        loginToken.setConfirmedAt(LocalDateTime.now());
+        loginVerificationTokenRepository.save(loginToken);
+
+        // Get user and reset login attempts
+        User user = userRepository.findByEmail(loginToken.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        loginAttemptService.resetAttempts(user);
+        userRepository.save(user);
+
+        // Generate JWT token with additional claims
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("ip", ipAddress);
+        extraClaims.put("loginTime", LocalDateTime.now().toString());
+
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+        String jwtToken = jwtService.generateToken(extraClaims, userDetails);
+
+        // Send login notification
+        try {
+            emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
+        } catch (MessagingException e) {
+            throw new RuntimeException("\n\nFailed to send login notification", e);
+        }
+
+        return jwtToken;
+    }
+
+    private List<Role> determineUserRoles(User tempUser) {
         List<Role> roles = new ArrayList<>();
 
         if (userRepository.count() == 0) {
             roles.addAll(createInitialRoles());
+            tempUser.setVerified(true);
             System.out.println("\n\nFirst User Detected! Created Roles for Him/Her.");
         } else {
             Optional<Role> userRole = Optional.of(roleRepository.findByName(TbConstants.Roles.USER));
@@ -135,7 +248,6 @@ public class UserService {
         return roles;
     }
 
-    // Rest of the methods remain unchanged...
     private void validateNewUser(SignupRequest userDTO) {
         userRepository.findByUsername(userDTO.getUsername())
                 .ifPresent(user -> {
@@ -180,6 +292,7 @@ public class UserService {
 
     private User mapToUser(SignupRequest userDTO) {
         User user = new User();
+        user.setFullName(userDTO.getFullName());
         user.setUsername(userDTO.getUsername());
         user.setEmail(userDTO.getEmail());
         user.setPhoneNumber(userDTO.getPhoneNumber());
@@ -187,22 +300,26 @@ public class UserService {
         return user;
     }
 
-    public String verifyUser(LoginRequest userDTO) {
-        System.out.println("\n\n\nReceived new login request :- \n" + userDTO.toString() + "\n\n");
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        userDTO.getIdentifier(),
-                        userDTO.getPassword()));
+    @Transactional(readOnly = true)
+    public UserDashboardResponse getUserDashboardData(String username) {
 
-        if (authentication.isAuthenticated()) {
-            System.out.println("\n\nUser authenticated successfully: " + userDTO.getIdentifier() + "\n");
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(userDTO.getIdentifier());
-            System.out.println("\n\nUser details loaded successfully: " + userDetails.getUsername()
-                    + "\n\nGenerating Token..\n\n");
-            return jwtService.generateToken(userDetails);
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        System.out.println("\n\nFailed to Generate Token\n\n");
-        return "Failed to generate token";
+        UserDashboardResponse userDashboardResponse = new UserDashboardResponse();
+        userDashboardResponse.setFullName(user.getFullName());
+        userDashboardResponse.setUsername(user.getUsername());
+        userDashboardResponse.setEmail(user.getEmail());
+        userDashboardResponse.setPhoneNumber(user.getPhoneNumber());
+        userDashboardResponse.setVerified(user.getVerified());
+        userDashboardResponse.setStatus(user.getStatus());
+        userDashboardResponse.setCreatedAt(user.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime());
+        userDashboardResponse.setProfilePictureUrl(user.getProfilePictureUrl());
+        userDashboardResponse.setRoles(user.getRoles().stream()
+                .map(role -> role.getName())
+                .toList());
+
+        return userDashboardResponse;
     }
+
 }

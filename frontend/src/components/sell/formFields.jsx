@@ -140,7 +140,6 @@ export const FileUploader = ({ label, files, onRemove, getRootProps, getInputPro
                                 src={file.url}
                                 alt={`preview ${index}`}
                                 className="object-cover w-full rounded-md"
-                                objectFit="cover"
                             />
                         ) : (
                             <video

@@ -8,7 +8,7 @@ const ProfilePictureUploader = ({
     fileInputRef
 }) => {
     return (
-        <div className="relative w-32 h-32 mx-auto">
+        <div className="relative w-32 h-32 mx-auto mt-4">
             <Image
                 src={preview}
                 alt="Profile Preview"

@@ -1,4 +1,3 @@
-// components/LoadingSpinner.js
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -65,7 +64,7 @@ const LoadingSpinner = ({ type = 'default', size = 'default', text = 'Loading...
 
         wave: (
             <div className={containerClasses}>
-                <div className="relative flex justify-center items-center">
+                <div className="relative flex justify-center items-center mb-2">
                     <div className={`${sizeClasses[size]} animate-ping absolute bg-blue-400 rounded-full opacity-75`}></div>
                     <div className={`${sizeClasses[size]} relative bg-blue-500 rounded-full`}></div>
                 </div>
@@ -76,8 +75,8 @@ const LoadingSpinner = ({ type = 'default', size = 'default', text = 'Loading...
         circle: (
             <div className={containerClasses}>
                 <div className="relative">
-                    <div className={`${sizeClasses[size]} border-8 border-gray-200 rounded-full`}></div>
-                    <div className={`${sizeClasses[size]} border-8 border-blue-500 rounded-full animate-spin absolute top-0 border-t-transparent`}></div>
+                    <div className={`${sizeClasses[size]} border-4 border-gray-200 rounded-full`}></div>
+                    <div className={`${sizeClasses[size]} border-4 border-blue-500 rounded-full animate-spin absolute top-0 border-t-transparent`}></div>
                 </div>
                 <div className={textClasses}>{text}{dots}</div>
             </div>

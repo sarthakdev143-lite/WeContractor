@@ -1,95 +1,40 @@
 package github.sarthakdev.backend.controller;
 
+import github.sarthakdev.backend.dto.UserDashboardResponse;
+import github.sarthakdev.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import github.sarthakdev.backend.dto.SignupResponse;
-import github.sarthakdev.backend.exception.UserAlreadyExistsException;
-import github.sarthakdev.backend.service.UserService;
+
 import lombok.RequiredArgsConstructor;
-import github.sarthakdev.backend.dto.ApiResponse;
-import github.sarthakdev.backend.dto.LoginRequest;
-import github.sarthakdev.backend.dto.LoginResponse;
-import github.sarthakdev.backend.dto.SignupRequest;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/user")
+@Slf4j
 @Validated
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "#{@getAllowedOrigins}" }) // Injected CORS origins dynamically
+@CrossOrigin(origins = { "#{@getAllowedOrigins}" }, maxAge = 3600)
 public class UserController {
-
     private final UserService userService;
 
-    @GetMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
-        try {
-            String result = userService.verifyEmail(token);
-            return ResponseEntity.ok(new ApiResponse(true, result));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "Invalid verification token"));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
-        }
-    }
+    @GetMapping
+    public ResponseEntity<UserDashboardResponse> getUser() {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> userSignup(@Validated @RequestBody SignupRequest userDTO) {
-        try {
-            System.out.println("\n\n\nReceived new signup request :- \n" + userDTO.toString() + "\n\n");
-            SignupResponse signupResponse = userService.signup(userDTO);
-            System.out.println("Final Response :- \n" + signupResponse + "\n\n");
-            return ResponseEntity.ok(signupResponse);
-        } catch (UserAlreadyExistsException e) {
-            System.out.println(
-                    "\n\n\nSignup failed." + "\n\nFinal Response :- \n" + e.getMessage() + "\n\nLocalized Message : "
-                            + e.getLocalizedMessage() + "\n\nCause : " + e.getCause() + "\n\n");
+        System.out.println("\n\nFetching dashboard data for user: " + username + "\n\n");
 
-            return ResponseEntity.badRequest()
-                    .body(new SignupResponse(e.getMessage(), null, false));
+        try {
+            UserDashboardResponse dashboardData = userService.getUserDashboardData(username);
+            System.out.println("\n\nDashboard data: " + dashboardData + "\n\n");
+            return ResponseEntity.ok(dashboardData);
         } catch (Exception e) {
-            System.out.println(
-                    "\n\n\nUnexpected error during signup" + "\n\nFinal Response :- \n" + e.getMessage() + "\n\n"
-                            + "\n\nLocalized Message : "
-                            + e.getLocalizedMessage() + "\n\nCause : " + e.getCause() + "\n\n");
-            return ResponseEntity.internalServerError()
-                    .body(new SignupResponse("An unexpected error occurred", null, false));
-        }
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> userLogin(@Validated @RequestBody LoginRequest userDTO) {
-        String token = userService.verifyUser(userDTO);
-        if (token.equals("failed to generate token")) {
-            System.out.println("\n\n\nLogin failed." + "\n\nFinal Response :- \n" + token + "\n\n");
-            return ResponseEntity.badRequest().body(new LoginResponse(token, false, null));
-        }
-        var response = new LoginResponse("User logged in successfully.", true, token);
-        System.out.println("Final Response :- \n" + response + "\n\n");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/api/validate-token")
-    public ResponseEntity<?> validateToken() {
-        try {
-            
-            // Get the authentication object from security context
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            // Check if user is authenticated
-            if (auth != null && auth.isAuthenticated()) {
-                return ResponseEntity.ok()
-                        .body(new ApiResponse(true, "Token is valid", null));
-            }
-
-            return ResponseEntity.status(401)
-                    .body(new ApiResponse(false, "Invalid token", null));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(401)
-                    .body(new ApiResponse(false, "Token validation failed", e.getMessage()));
+            System.out.println("\n\nError fetching dashboard data: " + e.getMessage() + "\n\n");
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

@@ -34,8 +34,8 @@ export const notify = {
             closeOnClick: true,
             draggable: true,
             style: {
-                background: "#fbbf24",
-                color: "#ffffff",
+                background: "#8A6D1D",
+                color: "#f4d149",
             },
         });
     },
