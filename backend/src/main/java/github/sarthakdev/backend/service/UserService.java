@@ -162,7 +162,7 @@ public class UserService {
         loginVerificationTokenRepository.save(loginToken);
 
         // Generate login link
-        String loginLink = frontendUrl + "/form/verify-login?token=" + token;
+        String loginLink = frontendUrl + "/form/login/verify-login?token=" + token;
 
         // Send email with login link
         try {
