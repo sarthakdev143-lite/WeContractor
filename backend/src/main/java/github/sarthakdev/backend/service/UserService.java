@@ -122,51 +122,58 @@ public class UserService {
         return "Email verified successfully";
     }
 
-    public String initiateLogin(SecureLoginRequest request, String ipAddress, String userAgent)
-            throws MessagingException {
-        System.out.println("Initiating Login for : " + request + "\n\n");
+    public String initiateLogin(SecureLoginRequest request, String ipAddress, String userAgent) {
+        System.out.println("\n\nInitiating Login for: " + request + "\n\n");
+
+        // Retrieve user by email or username
         User user = userRepository.findByEmail(request.getIdentifier())
+                .or(() -> userRepository.findByUsername(request.getIdentifier()))
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        // Check if account is locked
+        // Check if the account is locked
         try {
             loginAttemptService.checkLoginAttempts(user);
         } catch (AccountLockedException e) {
             e.printStackTrace();
-        }
+        } // Throws AccountLockedException if locked
 
+        // Ensure the account is enabled
         if (!user.getEnabled()) {
             throw new RuntimeException("Account not verified");
         }
 
-        // Verify password first
+        // Verify the password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            loginAttemptService.recordFailedAttempt(user);
+            try {
+                loginAttemptService.recordFailedAttempt(user);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
             userRepository.save(user);
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Generate unique login token
+        // Generate a unique login token
         String token = UUID.randomUUID().toString();
-
-        // Store hashed password attempt with token
         String passwordHash = passwordEncoder.encode(request.getPassword());
+
+        // Create a new LoginVerificationToken
         LoginVerificationToken loginToken = new LoginVerificationToken(
-                token, request.getIdentifier(), passwordHash, ipAddress, userAgent);
+                token, user.getEmail(), passwordHash, ipAddress, userAgent); // Use user's email here
 
         // Remove any existing unconfirmed tokens for this user
-        loginVerificationTokenRepository.findByEmail(request.getIdentifier())
+        loginVerificationTokenRepository.findByEmail(user.getEmail())
                 .ifPresent(loginVerificationTokenRepository::delete);
 
-        // Save new token
+        // Save the new token
         loginVerificationTokenRepository.save(loginToken);
 
-        // Generate login link
-        String loginLink = frontendUrl + "/form/verify-login?token=" + token;
+        // Generate the login link
+        String loginLink = frontendUrl + "/form/login/verify-login?token=" + token;
 
-        // Send email with login link
+        // Send the login link to the user's email
         try {
-            emailService.sendLoginLink(request.getIdentifier(), loginLink);
+            emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to user's email
             return "Login verification link sent to your email";
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send login verification email", e);
