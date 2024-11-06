@@ -18,7 +18,7 @@ export default function NotFound() {
                                 <span className="block w-full h-full text-red-500 text-center">1</span>
                             </span>
                             <span className="text-gray-600">
-                                The page <span className="font-medium">doesn't exist</span> or might have been deleted
+                                The page <span className="font-medium">doesn&apos;t exist</span> or might have been deleted
                             </span>
                         </li>
                         <li className="flex items-center">
