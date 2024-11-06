@@ -1,14 +1,18 @@
-"use client";
+// src/app/form/login/verify-login/page.js
+'use client';
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MYAXIOS } from '../../../../components/Helper';
 import { AuthUtils } from '../../../../components/utils/auth';
 import { notify } from '../../../../components/notifications';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-const VerifyLogin = () => {
+// Main verification component
+const VerifyLoginContent = () => {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const [verificationStatus, setVerificationStatus] = useState('verifying');
     const token = searchParams.get('token');
@@ -82,7 +86,7 @@ const VerifyLogin = () => {
                         <h2 className="text-2xl font-bold text-red-600">Verification Failed</h2>
                         <p className="mt-2 text-gray-500">Please try logging in again.</p>
                         <button
-                            onClick={() => window.location.href = '/login'}
+                            onClick={() => router.push('/form/login')}
                             className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 duration-200"
                         >
                             Return to Login
@@ -99,6 +103,17 @@ const VerifyLogin = () => {
                 className="mt-6"
             />
         </div>
+    );
+};
+
+// Wrapper component with Suspense
+const VerifyLogin = () => {
+    return (
+        <Suspense fallback={<LoadingSpinner
+            type="bounce"
+        />}>
+            <VerifyLoginContent />
+        </Suspense>
     );
 };
 

@@ -205,25 +205,25 @@ const UserDashboard = () => {
                             <div className="space-y-2">
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/bank-accounts')}
+                                    onClick={() => router.push('/user-dashboard/bank-accounts')}
                                 >
                                     Manage Bank Accounts
                                 </button>
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/plots')}
+                                    onClick={() => router.push('/user-dashboard/plots')}
                                 >
                                     View Plots
                                 </button>
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/transactions')}
+                                    onClick={() => router.push('/tuser-dashboard/ransactions')}
                                 >
                                     Transaction History
                                 </button>
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/favourites')}
+                                    onClick={() => router.push('/user-dashboard/favourites')}
                                 >
                                     View Favourites
                                 </button>

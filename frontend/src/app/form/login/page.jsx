@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { MYAXIOS } from "../../../components/Helper";
-import { AuthUtils } from "../../../components/utils/auth";
 import FormInput from "../../../components/auth/FormInput";
 import { validators } from "../../../components/sell/utils";
 import { ToastContainer } from 'react-toastify';
@@ -201,7 +200,7 @@ const Login = () => {
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <p className="text-blue-600 mb-2">Check your email!</p>
             <p className="text-sm text-gray-600">
-              We've sent a verification link to {credentials.identifier}
+              We&apos;ve sent a verification link to {credentials.identifier}
             </p>
           </div>
         ) : (

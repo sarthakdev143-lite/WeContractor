@@ -1,8 +1,10 @@
 'use client'
 
-import Link from 'next/link'
+import { Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import EmailVerification from '../components/EmailVerification';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Home = () => {
   return (
@@ -21,12 +23,22 @@ const Home = () => {
   );
 }
 
-const page = () => {
+const Page = () => {
+  return (
+    <Suspense fallback={<LoadingSpinner
+      type='wave'
+    />}>
+      <PageContent />
+    </Suspense>
+  );
+}
+
+const PageContent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
   if (!token) return <Home />;
-  return <EmailVerification token={token} />
+  return <EmailVerification token={token} />;
 }
 
-export default page
+export default Page;

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,14 +9,14 @@ export const useAuth = () => {
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
-    useEffect(() => {
-        checkAuthStatus();
-    }, []);
-
     const checkAuthStatus = useCallback(() => {
         setIsLoggedIn(AuthUtils.isAuthenticated());
         setIsLoading(false);
     }, []);
+
+    useEffect(() => {
+        checkAuthStatus();
+    }, [checkAuthStatus]);
 
     const login = useCallback(async (token) => {
         AuthUtils.setToken(token);

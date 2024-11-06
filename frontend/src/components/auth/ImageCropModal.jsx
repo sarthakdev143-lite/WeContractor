@@ -1,37 +1,7 @@
 import Cropper from "react-easy-crop";
-
-const RangeInput = ({ value, min, max, step, onChange, leftIcon, rightIcon }) => (
-    <div className="flex items-center space-x-2">
-        <i className={`${leftIcon} text-gray-500`} />
-        <input
-            type="range"
-            value={value}
-            min={min}
-            max={max}
-            step={step}
-            onChange={onChange}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-        />
-        <i className={`${rightIcon} text-gray-500`} />
-    </div>
-);
-
-import React from 'react';
 import { X, ZoomIn, ZoomOut, RotateCcw, RotateCw } from 'lucide-react';
 
-const ImageCropModal = ({
-    isOpen,
-    imageSource,
-    crop,
-    setCrop,
-    zoom,
-    setZoom,
-    rotation,
-    setRotation,
-    onCropComplete,
-    onClose,
-    onSave
-}) => {
+const ImageCropModal = ({ isOpen, imageSource, crop, setCrop, zoom, setZoom, rotation, setRotation, onCropComplete, onClose, onSave }) => {
     if (!isOpen) return null;
 
     return (
