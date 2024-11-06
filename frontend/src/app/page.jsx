@@ -3,8 +3,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import EmailVerification from '../components/EmailVerification';
-import LoadingSpinner from '../components/LoadingSpinner';
+import EmailVerification from '@/components/EmailVerification';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Home = () => {
   return (

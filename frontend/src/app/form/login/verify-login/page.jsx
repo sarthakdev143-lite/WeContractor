@@ -3,9 +3,9 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MYAXIOS } from '../../../../components/Helper';
-import { AuthUtils } from '../../../../components/utils/auth';
-import { notify } from '../../../../components/notifications';
+import { MYAXIOS } from '@/components/Helper';
+import { AuthUtils } from '@/components/utils/auth';
+import { notify } from '@/components/notifications';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingSpinner from '@/components/LoadingSpinner';

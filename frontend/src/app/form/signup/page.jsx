@@ -1,15 +1,15 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { MYAXIOS } from "../../../components/Helper";
-import { deleteFromCloudinary } from "../../../components/sell/handlers";
-import ProfilePictureUploader from "../../../components/auth/ProfilePictureUploader";
-import ImageCropModal from "../../../components/auth/ImageCropModal";
-import FormInput from "../../../components/auth/FormInput";
-import { validators } from "../../../components/sell/utils";
-import { useImageCrop } from "../../../components/hooks/useImageCrop";
+import { MYAXIOS } from "@/components/Helper";
+import { deleteFromCloudinary } from "@/components/sell/handlers";
+import ProfilePictureUploader from "@/components/auth/ProfilePictureUploader";
+import ImageCropModal from "@/components/auth/ImageCropModal";
+import FormInput from "@/components/auth/FormInput";
+import { validators } from "@/components/sell/utils";
+import { useImageCrop } from "@/components/hooks/useImageCrop";
 import { ToastContainer } from 'react-toastify';
-import { notify } from '../../../components/notifications';
+import { notify } from '@/components/notifications';
 import 'react-toastify/dist/ReactToastify.css';
 
 const DEFAULT_PFP = "/default-avatar.webp";

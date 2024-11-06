@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Image from 'next/image';
-import { AuthUtils } from '../../components/utils/auth';
-import LoadingSpinner from '../../components/LoadingSpinner'
+import { AuthUtils } from '@/components/utils/auth';
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 const UserDashboard = () => {
     const [userData, setUserData] = useState(null);

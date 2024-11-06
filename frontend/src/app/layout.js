@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import 'remixicon/fonts/remixicon.css'
-import Navbar from "../components/Navbar";
+import Navbar from "@/components/Navbar";
 import Head from "next/head";
 
 const geistSans = localFont({

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { MYAXIOS } from "../../../components/Helper";
-import FormInput from "../../../components/auth/FormInput";
-import { validators } from "../../../components/sell/utils";
+import { MYAXIOS } from "@/components/Helper";
+import FormInput from "@/components/auth/FormInput";
+import { validators } from "@/components/sell/utils";
 import { ToastContainer } from 'react-toastify';
-import { notify } from '../../../components/notifications';
+import { notify } from '@/components/notifications';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Error handling utility functions

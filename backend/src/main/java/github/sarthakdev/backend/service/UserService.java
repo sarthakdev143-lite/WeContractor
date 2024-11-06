@@ -75,6 +75,8 @@ public class UserService {
 
         // Send verification email
         try {
+            System.out.println("\n\nSending new Verification Email for: " + tempUser + "\n\nVerification Link : "
+                    + frontendUrl + "/?token=" + verificationToken.getToken() + "\n\n");
             emailService.sendVerificationEmail(tempUser.getEmail(), verificationToken.getToken());
             return new SignupResponse("Verification email sent. Please check your inbox.", savedTempUser, true);
         } catch (MessagingException e) {
@@ -170,6 +172,7 @@ public class UserService {
 
         // Generate the login link
         String loginLink = frontendUrl + "/form/login/verify-login?token=" + token;
+        System.out.println("\n\nLogin Link : " + loginLink + "\n\n");
 
         // Send the login link to the user's email
         try {
