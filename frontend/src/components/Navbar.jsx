@@ -67,7 +67,7 @@ const Navbar = () => {
     const LogoutButton = ({ className = "" }) => (
         <button
             onClick={() => setShowLogoutModal(true)}
-            className={`px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors ${className}`}
+            className={`m-0 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors ${className}`}
         >
             Logout
         </button>
@@ -131,12 +131,12 @@ const Navbar = () => {
 
                 {/* Mobile Navigation Menu */}
                 <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-                    <div className="px-4 py-3 space-y-3 bg-gray-50 border-t">
+                    <div className="px-4 py-3 flex items-center gap-3 bg-gray-50 border-t">
                         {isLoggedIn ? (
                             <>
                                 <Link
                                     href="/user-dashboard"
-                                    className="block text-center text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
+                                    className="block w-full text-center text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
                                     onClick={toggleMenu}
                                 >
                                     Dashboard

@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { fieldConfig, plotTypes, amenitiesList } from '@/components/sell/constants.js';
-import { FormField, PlotTypeSelector, AmenitiesSelector, TagInput, FileUploader, SubmitButton } from '@/components/sell/formFields.jsx';
+import { PlotTypeSelector, AmenitiesSelector, TagInput, FileUploader, SubmitButton } from '@/components/sell/formFields.jsx';
 import { handleChange, handleAmenityToggle, handleTagInput, removeTag, onDrop, onRemove } from '@/components/sell/handlers.js';
 import { validateForm, formatIndianCurrency } from '@/components/sell/utils.js';
 import { StatusMessage } from '@/components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '@/components/Helper.js';
 import withAuth from '@/components/WithAuth.js';
+import { TitleField, DescriptionField, LengthField, BreadthField, AreaField, LocationField, PriceField, DiscountField } from './FormFields';
 
 const Sell = () => {
     const [formData, setFormData] = useState({
@@ -75,15 +76,54 @@ const Sell = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex gap-8 max-md:flex-col">
                     <section id="left" className="flex flex-col gap-6 flex-grow md:max-w-[50%]">
-                        {fieldConfig.map((field) => (
-                            <FormField
-                                key={field.name}
-                                field={field}
-                                value={formData[field.name]}
+                        <TitleField
+                            field={fieldConfig.find(f => f.name === 'title')}
+                            value={formData.title}
+                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                            error={formErrors.title}
+                        />
+                        <DescriptionField
+                            field={fieldConfig.find(f => f.name === 'description')}
+                            value={formData.description}
+                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                            error={formErrors.description}
+                        />
+                        <div className="flex gap-4">
+                            <LengthField
+                                field={fieldConfig.find(f => f.name === 'length')}
+                                value={formData.length}
                                 onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
-                                error={formErrors[field.name]}
+                                error={formErrors.length}
                             />
-                        ))}
+                            <BreadthField
+                                field={fieldConfig.find(f => f.name === 'breadth')}
+                                value={formData.breadth}
+                                onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                                error={formErrors.breadth}
+                            />
+                            <AreaField
+                                length={formData.length}
+                                breadth={formData.breadth}
+                            />
+                        </div>
+                        <LocationField
+                            field={fieldConfig.find(f => f.name === 'location')}
+                            value={formData.location}
+                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                            error={formErrors.location}
+                        />
+                        <PriceField
+                            field={fieldConfig.find(f => f.name === 'price')}
+                            value={formData.price}
+                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                            error={formErrors.price}
+                        />
+                        <DiscountField
+                            field={fieldConfig.find(f => f.name === 'discount')}
+                            value={formData.discount}
+                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                            error={formErrors.discount}
+                        />
                     </section>
 
                     <section id="right" className="flex flex-col gap-6 flex-grow md:max-w-[50%]">

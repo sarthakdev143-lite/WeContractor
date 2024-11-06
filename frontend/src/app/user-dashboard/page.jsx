@@ -118,7 +118,7 @@ const UserDashboard = () => {
                             </div>
                         </div>
                         <button
-                            onClick={() => router.push('/user-dashboard/settings')}
+                            onClick={() => router.forward('/settings')}
                             className="px-3 py-[0.5rem] h-fit text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                             <i className="ri-list-settings-line text-xl"></i>
@@ -205,25 +205,25 @@ const UserDashboard = () => {
                             <div className="space-y-2">
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/user-dashboard/bank-accounts')}
+                                    onClick={() => router.forward('/bank-accounts')}
                                 >
                                     Manage Bank Accounts
                                 </button>
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/user-dashboard/plots')}
+                                    onClick={() => router.forward('/plots')}
                                 >
                                     View Plots
                                 </button>
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/tuser-dashboard/ransactions')}
+                                    onClick={() => router.forward('/transactions')}
                                 >
                                     Transaction History
                                 </button>
                                 <button
                                     className="w-full px-4 py-2 text-left text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    onClick={() => router.push('/user-dashboard/favourites')}
+                                    onClick={() => router.forward('/favourites')}
                                 >
                                     View Favourites
                                 </button>
