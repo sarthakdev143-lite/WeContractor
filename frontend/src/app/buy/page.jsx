@@ -108,19 +108,6 @@ const Buy = () => {
         setSearchQuery(e.target.value);
     };
 
-    // const filterProperties = () => {
-    //     const filtered = properties.filter(
-    //         (property) =>
-    //             (property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    //                 property.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
-    //             property.price >= priceRange[0] &&
-    //             property.price <= priceRange[1] &&
-    //             (property.length * property.breadth) >= plotSizeRange[0] &&
-    //             (property.length * property.breadth) <= plotSizeRange[1]
-    //     );
-    //     setFilteredProperties(filtered);
-    // };
-
     const handleThumbMove = (index, clientX, rangeState, setRangeState, minValue, maxValue, sliderRef) => {
         const sliderBounds = sliderRef.current.getBoundingClientRect();
         const percent = Math.min(Math.max((clientX - sliderBounds.left) / sliderBounds.width, 0), 1);
@@ -216,7 +203,7 @@ const Buy = () => {
                             {[0, 1].map((index) => (
                                 <div
                                     key={index}
-                                    className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer"
+                                    className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
                                     style={{ left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%` }}
                                     onMouseDown={(e) => {
                                         e.preventDefault();
@@ -229,6 +216,27 @@ const Buy = () => {
                                         };
                                         document.addEventListener('mousemove', handleMouseMove);
                                         document.addEventListener('mouseup', handleMouseUp);
+                                    }}
+                                    onTouchStart={(e) => {
+                                        e.preventDefault();
+                                        const handleTouchMove = (event) => {
+                                            event.preventDefault();
+                                            handleThumbMove(
+                                                index,
+                                                event.touches[0].clientX,
+                                                priceRange,
+                                                setPriceRange,
+                                                minPrice,
+                                                maxPrice,
+                                                priceSliderRef
+                                            );
+                                        };
+                                        const handleTouchEnd = () => {
+                                            document.removeEventListener('touchmove', handleTouchMove);
+                                            document.removeEventListener('touchend', handleTouchEnd);
+                                        };
+                                        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                        document.addEventListener('touchend', handleTouchEnd);
                                     }}
                                 ></div>
                             ))}
@@ -252,7 +260,7 @@ const Buy = () => {
                             {[0, 1].map((index) => (
                                 <div
                                     key={index}
-                                    className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer"
+                                    className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
                                     style={{ left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%` }}
                                     onMouseDown={(e) => {
                                         e.preventDefault();
@@ -265,6 +273,27 @@ const Buy = () => {
                                         };
                                         document.addEventListener('mousemove', handleMouseMove);
                                         document.addEventListener('mouseup', handleMouseUp);
+                                    }}
+                                    onTouchStart={(e) => {
+                                        e.preventDefault();
+                                        const handleTouchMove = (event) => {
+                                            event.preventDefault();
+                                            handleThumbMove(
+                                                index,
+                                                event.touches[0].clientX,
+                                                plotSizeRange,
+                                                setPlotSizeRange,
+                                                minPlotSize,
+                                                maxPlotSize,
+                                                plotSizeSliderRef
+                                            );
+                                        };
+                                        const handleTouchEnd = () => {
+                                            document.removeEventListener('touchmove', handleTouchMove);
+                                            document.removeEventListener('touchend', handleTouchEnd);
+                                        };
+                                        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                        document.addEventListener('touchend', handleTouchEnd);
                                     }}
                                 ></div>
                             ))}

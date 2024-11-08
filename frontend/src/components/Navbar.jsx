@@ -147,7 +147,7 @@ const Navbar = () => {
                             <>
                                 <Link
                                     href="/form/signup"
-                                    className="block text-center text-blue-600 hover:text-blue-800 py-2"
+                                    className="block w-full text-center text-blue-600 hover:text-blue-800 py-2"
                                     onClick={toggleMenu}
                                 >
                                     Signup

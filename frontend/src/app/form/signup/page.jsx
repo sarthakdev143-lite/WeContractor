@@ -271,10 +271,12 @@ const SignUp = () => {
     };
 
     useEffect(() => {
-        fetch('/api/cloudinary/config')
-            .then(res => res.json())
-            .then(data => setCloudinaryConfig(data))
-            .catch(err => console.error('Error fetching Cloudinary config:', err));
+        setTimeout(() => {
+            fetch('/api/cloudinary/config')
+                .then(res => res.json())
+                .then(data => setCloudinaryConfig(data))
+                .catch(err => console.error('Error fetching Cloudinary config:', err));
+        }, 5000);
     }, []);
 
     // Cloudinary upload

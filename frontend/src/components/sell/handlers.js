@@ -58,7 +58,7 @@ export const onDrop = async (acceptedFiles, type, setFormData, setLoading) => {
         const uploadPromises = filteredFiles.map((file) => {
             const formData = new FormData();
             formData.append("file", file);
-            formData.append("upload_preset", "frontend_upload");
+            formData.append("upload_preset", "plot_upload");
 
             return fetch("https://api.cloudinary.com/v1_1/dgbnelai8/upload", {
                 method: "POST",

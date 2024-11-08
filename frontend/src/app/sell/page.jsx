@@ -9,7 +9,7 @@ import { validateForm, formatIndianCurrency } from '@/components/sell/utils.js';
 import { StatusMessage } from '@/components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '@/components/Helper.js';
 import withAuth from '@/components/WithAuth.js';
-import { TitleField, DescriptionField, LengthField, BreadthField, AreaField, LocationField, PriceField, DiscountField } from './FormFields';
+import { TitleField, DescriptionField, LengthField, BreadthField, AreaField, LocationField, PriceField, DiscountField, PricePerSqftField, PriceAfterDiscountField } from './FormFields';
 
 const Sell = () => {
     const [formData, setFormData] = useState({
@@ -88,7 +88,7 @@ const Sell = () => {
                             onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
                             error={formErrors.description}
                         />
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             <LengthField
                                 field={fieldConfig.find(f => f.name === 'length')}
                                 value={formData.length}
@@ -112,18 +112,27 @@ const Sell = () => {
                             onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
                             error={formErrors.location}
                         />
-                        <PriceField
-                            field={fieldConfig.find(f => f.name === 'price')}
-                            value={formData.price}
-                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
-                            error={formErrors.price}
-                        />
-                        <DiscountField
-                            field={fieldConfig.find(f => f.name === 'discount')}
-                            value={formData.discount}
-                            onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
-                            error={formErrors.discount}
-                        />
+                        <div className="flex gap-4">
+                            <PriceField
+                                field={fieldConfig.find(f => f.name === 'price')}
+                                value={formData.price}
+                                onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                                error={formErrors.price}
+                            />
+                            <PricePerSqftField length={formData.length} breadth={formData.breadth} price={formData.price} />
+                        </div>
+                        <div className="flex gap-4">
+                            <DiscountField
+                                field={fieldConfig.find(f => f.name === 'discount')}
+                                value={formData.discount}
+                                onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
+                                error={formErrors.discount}
+                            />
+                            <PriceAfterDiscountField
+                                price={formData.price}
+                                discount={formData.discount}
+                            />
+                        </div>
                     </section>
 
                     <section id="right" className="flex flex-col gap-6 flex-grow md:max-w-[50%]">

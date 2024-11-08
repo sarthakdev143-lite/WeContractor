@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export const PlotTypeSelector = ({ selectedType, onChange, types, error }) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Plot Type (required)</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Plot Type <i>(required)</i></label>
         <div className="mt-2 flex flex-wrap gap-2">
             {types.map((type) => (
                 <button
@@ -25,7 +25,7 @@ export const PlotTypeSelector = ({ selectedType, onChange, types, error }) => (
 export const AmenitiesSelector = ({ selectedAmenities, onToggle, amenities }) => (
     <div>
         <label title='Services that are easily accessible near your plot.' className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-            Amenities <i title='Select the amenities available in your plot' className="ri-information-line ml-1 text-gray-500"></i>
+            Amenities <i title='Select the amenities available in your plot' className="ri-information-line ml-1 text-gray-500"></i><i className="ml-1.5">(optional)</i>
         </label>
         <div className="mt-2 flex flex-wrap gap-2">
             {amenities.map((amenity) => (
@@ -48,7 +48,7 @@ export const AmenitiesSelector = ({ selectedAmenities, onToggle, amenities }) =>
 export const TagInput = ({ tags, onKeyDown, onRemove }) => (
     <div>
         <label htmlFor="tags" title='Adding tags could help your plot be found easily by buyers.' className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-            Tags <i title='Tags are the keywords related to your plot' className="ri-information-line ml-1 text-gray-500"></i>
+            Tags <i title='Tags are the keywords related to your plot' className="ri-information-line ml-1 text-gray-500"></i><i className="ml-1.5">(optional)</i>
         </label>
         <div className="mt-1 flex flex-wrap gap-2 p-2 border border-gray-300 rounded-md">
             {tags.map((tag, index) => (
@@ -77,7 +77,8 @@ export const FileUploader = ({ label, files, onRemove, getRootProps, getInputPro
     return (
         <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-                {label} {label === "Images" && "(at least 1 required)"}
+                {label} {label === "Images" && <i>(at least 1 required)</i>}
+                {label === "Videos" && <i>(optional)</i>}
             </label>
             <div
                 {...getRootProps()}
@@ -95,20 +96,21 @@ export const FileUploader = ({ label, files, onRemove, getRootProps, getInputPro
                     <p className="text-xs text-gray-500">{acceptedFormats}</p>
                 </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-center">
                 {files.map((file, index) => (
-                    <div key={index} className="relative flex-grow max-h-36 aspect-video">
+                    <div key={index} className="relative w-44 mt-4">
                         {file.url.match(/\.(jpeg|jpg|gif|png)$/) != null ? (
-                            <Image
-                                src={file.url}
-                                alt={`preview ${index}`}
-                                className="object-cover w-full rounded-md"
-                            />
+                            <div className="relative w-full pb-[100%] overflow-hidden rounded-md">
+                                <img
+                                    src={file.url}
+                                    alt={`preview ${index}`}
+                                    className="absolute top-0 left-0 w-full h-full object-contain"
+                                />
+                            </div>
                         ) : (
                             <video
                                 src={file.url}
-                                className="object-cover w-full rounded-md"
-                                controls
+                                className="rounded-md"
                             />
                         )}
                         <button
