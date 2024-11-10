@@ -177,6 +177,7 @@ public class UserService {
         // Send the login link to the user's email
         try {
             emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to user's email
+            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who requested login : " + user + "\n\n");
             return "Login verification link sent to your email";
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send login verification email", e);
@@ -226,6 +227,8 @@ public class UserService {
         // Send login notification
         try {
             emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
+            System.out.println(
+                    "\n\nLogin Notification Sent Successfully!!..\nUser who requested login : " + user + "\n\n");
         } catch (MessagingException e) {
             throw new RuntimeException("\n\nFailed to send login notification", e);
         }
