@@ -100,8 +100,8 @@ export const FileUploader = ({ label, files, onRemove, getRootProps, getInputPro
                 {files.map((file, index) => (
                     <div key={index} className="relative w-44 mt-4">
                         {file.url.match(/\.(jpeg|jpg|gif|png)$/) != null ? (
-                            <div className="relative w-full pb-[100%] overflow-hidden rounded-md">
-                                <img
+                            <div className="relative w-full pb-[100%] overflow-hidden bg-black rounded-md">
+                                <Image
                                     src={file.url}
                                     alt={`preview ${index}`}
                                     className="absolute top-0 left-0 w-full h-full object-contain"

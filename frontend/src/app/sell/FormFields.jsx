@@ -1,3 +1,4 @@
+import { formatIndianCurrency } from "@/components/sell/utils";
 import { useMemo } from "react";
 
 export const TitleField = ({ field, value, onChange, error }) => {
@@ -41,6 +42,7 @@ export const DescriptionField = ({ field, value, onChange, error }) => {
                     name={field.name}
                     rows={4}
                     className="w-full min-h-32 pl-10 pr-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
+                    style={{scrollbarWidth: "thin"}}
                     placeholder={`Enter ${field.label.toLowerCase()}`}
                     onChange={onChange}
                     value={value || ""}
@@ -208,7 +210,7 @@ export const PricePerSqftField = ({ length, breadth, price }) => {
                 </span>
                 <input
                     type="text"
-                    value={pricePerSqft !== "N/A" ? `₹${pricePerSqft}` : "₹N/A"}
+                    value={pricePerSqft !== "N/A" ? `₹${formatIndianCurrency(pricePerSqft)}` : "₹N/A"}
                     className="w-full pl-10 pr-3 py-2 text-gray-700 bg-white
             border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
                     readOnly
@@ -220,7 +222,7 @@ export const PricePerSqftField = ({ length, breadth, price }) => {
 
 export const DiscountField = ({ field, value, onChange, error }) => {
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 flex-grow">
             <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
                 {field.label}
             </label>
@@ -246,7 +248,8 @@ export const DiscountField = ({ field, value, onChange, error }) => {
 export const PriceAfterDiscountField = ({ price, discount }) => {
     const priceAfterDiscount = useMemo(() => {
         const numPrice = parseFloat(parseInt(price.replace(/[^0-9]/g, ''), 10));
-        const numDiscount = parseFloat(parseInt(discount.replace(/[^0-9]/g, ''), 10));
+        // const numDiscount = parseFloat(parseInt(discount.replace(/[^0-9]/g, ''), 10));
+        const numDiscount = parseFloat(discount.replace(/[^0-9.]/g, ''));
 
         if (!isNaN(numPrice) && !isNaN(numDiscount) && numPrice > 0 && numDiscount > 0) {
             const calculatedPriceAfterDiscount = numPrice - (numPrice * (numDiscount / 100));
@@ -258,7 +261,7 @@ export const PriceAfterDiscountField = ({ price, discount }) => {
     }, [price, discount]);
 
     return (
-        <div className="space-y-2 flex-grow">
+        <div className="space-y-2 grow">
             <label htmlFor="price-after-discount" className="block text-sm font-medium text-gray-700 whitespace-nowrap">
                 Price After Discount <i>(readonly)</i>
             </label>
@@ -270,7 +273,7 @@ export const PriceAfterDiscountField = ({ price, discount }) => {
                     type="text"
                     id="price-after-discount"
                     name="price-after-discount"
-                    value={priceAfterDiscount !== "N/A" ? `₹${priceAfterDiscount}` : "₹N/A"}
+                    value={priceAfterDiscount !== "N/A" ? `₹${formatIndianCurrency(priceAfterDiscount)}` : "₹N/A"}
                     className="w-full pl-10 pr-3 py-2 text-gray-700 bg-white
                     border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
                     placeholder="Price after discount"

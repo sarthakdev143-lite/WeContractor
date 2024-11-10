@@ -5,7 +5,7 @@ export const fieldConfig = [
     { label: "Breadth", name: "breadth", type: "number", icon: "ri-ruler-line" },
     { label: "Location", name: "location", type: "text", icon: "ri-map-pin-line" },
     { label: "Price", name: "price", type: "text", icon: "ri-money-dollar-circle-line" },
-    { label: "Discount", name: "discount", type: "text", icon: "ri-percent-line" },
+    { label: "Discount", name: "discount", type: "number", icon: "ri-percent-line" },
 ];
 
 export const plotTypes = ["Residential", "Commercial", "Industrial", "Agricultural"];

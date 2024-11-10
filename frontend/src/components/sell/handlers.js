@@ -1,17 +1,16 @@
 export const handleChange = (e, setFormData, formatIndianCurrency) => {
     const { name, value } = e.target;
+    let formattedValue = value;
+
     if (name === 'price') {
         const numericValue = value.replace(/[^0-9]/g, '').replace(/^0+/, '');
-        const formattedValue = numericValue ? `₹${formatIndianCurrency(numericValue)}` : "";
-        setFormData(prev => ({ ...prev, [name]: formattedValue }));
+        formattedValue = numericValue ? `₹${formatIndianCurrency(numericValue)}` : "";
     } else if (name === 'discount') {
-        const discountValue = value.replace(/[^0-9]/g, '');
-        setFormData(prev => ({ ...prev, [name]: discountValue }));
-    } else {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        formattedValue = value.replace(/[^0-9.]/g, '').replace(/^0+(?!\.)/, '');
     }
-};
 
+    setFormData(prev => ({ ...prev, [name]: formattedValue }));
+};
 export const handleAmenityToggle = (amenity, setFormData) => {
     setFormData(prev => ({
         ...prev,

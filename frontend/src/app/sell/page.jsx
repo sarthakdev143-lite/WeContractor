@@ -112,7 +112,7 @@ const Sell = () => {
                             onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
                             error={formErrors.location}
                         />
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             <PriceField
                                 field={fieldConfig.find(f => f.name === 'price')}
                                 value={formData.price}
@@ -121,7 +121,7 @@ const Sell = () => {
                             />
                             <PricePerSqftField length={formData.length} breadth={formData.breadth} price={formData.price} />
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             <DiscountField
                                 field={fieldConfig.find(f => f.name === 'discount')}
                                 value={formData.discount}
@@ -178,6 +178,7 @@ const Sell = () => {
                             iconClass="ri-video-add-line"
                             acceptedFormats="MP4, MOV up to 5MB"
                         />
+                        
 
                         {loading && (
                             <div className="loading-skeleton flex items-center justify-center">
