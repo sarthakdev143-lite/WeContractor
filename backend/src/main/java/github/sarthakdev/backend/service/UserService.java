@@ -226,6 +226,7 @@ public class UserService {
 
         // Send login notification
         try {
+            System.out.println("\n\nSending Login Notification...\n\n");
             emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
             System.out.println(
                     "\n\nLogin Notification Sent Successfully!!..\nUser who requested login : " + user + "\n\n");
