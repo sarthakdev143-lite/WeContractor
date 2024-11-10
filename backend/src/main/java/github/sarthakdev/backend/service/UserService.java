@@ -177,7 +177,7 @@ public class UserService {
         // Send the login link to the user's email
         try {
             emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to user's email
-            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who requested login : " + user + "\n\n");
+            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who requested login :-\n" + printUserDetails(user) + "\n\n");
             return "Login verification link sent to your email";
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send login verification email", e);
@@ -224,17 +224,35 @@ public class UserService {
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
         String jwtToken = jwtService.generateToken(extraClaims, userDetails);
 
+        System.out.println("\n\nSending Login Notification...\n\n");
         // Send login notification
         try {
-            System.out.println("\n\nSending Login Notification...\n\n");
             emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
             System.out.println(
-                    "\n\nLogin Notification Sent Successfully!!..\nUser who requested login : " + user + "\n\n");
+                    "\n\nLogin Notification Sent Successfully!!..\n\nUser who requested login :-\n"
+                            + printUserDetails(user) + "\n\n");
         } catch (MessagingException e) {
             throw new RuntimeException("\n\nFailed to send login notification", e);
         }
 
         return jwtToken;
+    }
+
+    public static String printUserDetails(User user) {
+        StringBuilder userDetails = new StringBuilder();
+        userDetails.append("====================================\n");
+        userDetails.append("Full Name   : ").append(user.getFullName()).append("\n");
+        userDetails.append("Username    : ").append(user.getUsername()).append("\n");
+        userDetails.append("Email       : ").append(user.getEmail()).append("\n");
+        userDetails.append("Password    : ").append(user.getPassword()).append("\n");
+        userDetails.append("Phone Number: ").append(user.getPhoneNumber()).append("\n");
+        userDetails.append("Role (s)        : ").append(user.getRoles().get(0).getName()).append("\n");
+        userDetails.append("Status      : ").append(user.getStatus() != null ? user.getStatus() : "N/A").append("\n");
+        userDetails.append("Verified    : ").append(user.getVerified() ? "Yes" : "No").append("\n");
+        userDetails.append("Enabled     : ").append(user.getEnabled() ? "Yes" : "No").append("\n");
+        userDetails.append("Profile Picture URL  : ").append(user.getProfilePictureUrl()).append("\n");
+        userDetails.append("====================================\n");
+        return userDetails.toString();
     }
 
     private List<Role> determineUserRoles(User tempUser) {
