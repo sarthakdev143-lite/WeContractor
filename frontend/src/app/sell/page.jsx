@@ -10,6 +10,7 @@ import { StatusMessage } from '@/components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '@/components/Helper.js';
 import withAuth from '@/components/WithAuth.js';
 import { TitleField, DescriptionField, LengthField, BreadthField, AreaField, LocationField, PriceField, DiscountField, PricePerSqftField, PriceAfterDiscountField } from './FormFields';
+import { sanitizeFormData, validateSanitizedData } from '@/components/sell/formSanitizer'
 
 const Sell = () => {
     const [formData, setFormData] = useState({
@@ -34,19 +35,34 @@ const Sell = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const errors = validateForm(formData);
 
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
+        // First sanitize the form data
+        const sanitizedData = sanitizeFormData(formData);
+
+        // Validate the sanitized data
+        const { isValid, errors: sanitizationErrors } = validateSanitizedData(sanitizedData);
+
+        if (!isValid) {
+            setFormErrors(sanitizationErrors);
             setSubmitStatus("error");
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
+        // Proceed with your existing validation if needed
+        // const validationErrors = validateForm(sanitizedData);
+        // if (Object.keys(validationErrors).length > 0) {
+        //     setFormErrors(validationErrors);
+        //     setSubmitStatus("error");
+        //     window.scrollTo({ top: 0, behavior: 'smooth' });
+        //     return;
+        // }
+
+        console.log("Submitting Plot: ", sanitizedData);
         setLoading(true);
 
         try {
-            const response = await MYAXIOS.post('/api/plots', formData);
+            const response = await MYAXIOS.post('/api/plots', sanitizedData);
             console.log("API response: ", response);
             setSubmitStatus("success");
             setFormErrors({});
@@ -119,7 +135,12 @@ const Sell = () => {
                                 onChange={(e) => handleChange(e, setFormData, formatIndianCurrency)}
                                 error={formErrors.price}
                             />
-                            <PricePerSqftField length={formData.length} breadth={formData.breadth} price={formData.price} />
+                            <PricePerSqftField
+                                length={formData.length}
+                                breadth={formData.breadth}
+                                price={formData.price}
+                                discount={formData.discount}
+                            />
                         </div>
                         <div className="flex gap-4 flex-wrap">
                             <DiscountField
@@ -156,8 +177,8 @@ const Sell = () => {
                         />
 
                         <FileUploader
-                            label="Images"
                             accept={{ 'image/*': ['.jpeg', '.jpg', '.png', '.gif'] }}
+                            label="Images"
                             files={formData.images}
                             onDrop={(acceptedFiles) => onDrop(acceptedFiles, 'images', setFormData, setLoading)}
                             onRemove={(index) => onRemove(index, 'images', setFormData)}
@@ -168,8 +189,8 @@ const Sell = () => {
                         />
 
                         <FileUploader
-                            label="Videos"
                             accept={{ 'video/*': ['.mp4', '.mov', '.avi'] }}
+                            label="Videos"
                             files={formData.videos}
                             onDrop={(acceptedFiles) => onDrop(acceptedFiles, 'videos', setFormData, setLoading)}
                             onRemove={(index) => onRemove(index, 'videos', setFormData)}
@@ -178,7 +199,7 @@ const Sell = () => {
                             iconClass="ri-video-add-line"
                             acceptedFormats="MP4, MOV up to 5MB"
                         />
-                        
+
 
                         {loading && (
                             <div className="loading-skeleton flex items-center justify-center">

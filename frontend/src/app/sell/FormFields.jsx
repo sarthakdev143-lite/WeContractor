@@ -42,7 +42,7 @@ export const DescriptionField = ({ field, value, onChange, error }) => {
                     name={field.name}
                     rows={4}
                     className="w-full min-h-32 pl-10 pr-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
-                    style={{scrollbarWidth: "thin"}}
+                    style={{ scrollbarWidth: "thin" }}
                     placeholder={`Enter ${field.label.toLowerCase()}`}
                     onChange={onChange}
                     value={value || ""}
@@ -184,20 +184,22 @@ export const PriceField = ({ field, value, onChange, error }) => {
     );
 };
 
-export const PricePerSqftField = ({ length, breadth, price }) => {
+export const PricePerSqftField = ({ length, breadth, price, discount }) => {
     const pricePerSqft = useMemo(() => {
         const numLength = parseFloat(length);
         const numBreadth = parseFloat(breadth);
         const numPrice = parseFloat(parseInt(price.replace(/[^0-9]/g, ''), 10));
+        const numDiscount = discount == null ? 0 : discount;
 
         if (!isNaN(numLength) && !isNaN(numBreadth) && !isNaN(numPrice) && numLength > 0 && numBreadth > 0) {
-            const calculatedPricePerSqft = numPrice / (numLength * numBreadth);
-            console.log("Price Per Square Foot: ", calculatedPricePerSqft);
-            return calculatedPricePerSqft.toFixed(2);
+            const calculatedPricePerSqftBD = numPrice / (numLength * numBreadth);
+            const calculatedPricePerSqftAD = calculatedPricePerSqftBD - (calculatedPricePerSqftBD * numDiscount / 100);
+            // console.log("Price Per Square Foot: ", calculatedPricePerSqftBD);
+            return calculatedPricePerSqftAD.toFixed(3);
         } else {
             return "N/A";
         }
-    }, [length, breadth, price]);
+    }, [length, breadth, price, discount]);
 
     return (
         <div className="space-y-2 flex-grow">

@@ -21,7 +21,7 @@ import github.sarthakdev.backend.dto.SignupRequest;
 @RequestMapping("/api/auth")
 @Validated
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "#{@getAllowedOrigins}" }) // Injected CORS origins dynamically
+@CrossOrigin(origins = { "#{@getAllowedOrigins}" }, maxAge = 3600) // Injected CORS origins dynamically
 public class AuthController {
 
     private final UserService userService;

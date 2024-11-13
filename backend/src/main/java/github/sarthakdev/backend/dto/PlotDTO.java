@@ -1,27 +1,20 @@
 package github.sarthakdev.backend.dto;
 
 import java.util.List;
+import lombok.Data;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-@Setter
-@Getter
-@ToString
+@Data
 public class PlotDTO {
     private String title;
     private String description;
-    private String discount;
+    private Double length;
+    private Double breadth;
     private String location;
     private Double price;
     private String plotType;
-    private Double length;
-    private Double breadth;
-    private Float rating;
-    private List<String> imageUrls;
-    private List<String> videoUrls;
-    private List<String> tags;
+    private Double discount;
     private List<String> amenities;
-    private List<Double> priceHistory;
+    private List<String> images;
+    private List<String> videos;
+    private List<String> tags;
 }

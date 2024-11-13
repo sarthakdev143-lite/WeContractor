@@ -174,10 +174,11 @@ public class UserService {
         String loginLink = frontendUrl + "/form/login/verify-login?token=" + token;
         System.out.println("\n\nLogin Link : " + loginLink + "\n\n");
 
+        System.out.println("\n\nSending Login Link...");
         // Send the login link to the user's email
         try {
             emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to user's email
-            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who requested login :-\n" + printUserDetails(user) + "\n\n");
+            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who Initiated login :-\n" + printUserDetails(user) + "\n\n");
             return "Login verification link sent to your email";
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send login verification email", e);
@@ -224,12 +225,12 @@ public class UserService {
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
         String jwtToken = jwtService.generateToken(extraClaims, userDetails);
 
-        System.out.println("\n\nSending Login Notification...\n\n");
+        System.out.println("\n\nSending Login Notification...");
         // Send login notification
         try {
             emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
             System.out.println(
-                    "\n\nLogin Notification Sent Successfully!!..\n\nUser who requested login :-\n"
+                    "\n\nLogin Notification Sent Successfully!!..\nUser who Verified login :-\n"
                             + printUserDetails(user) + "\n\n");
         } catch (MessagingException e) {
             throw new RuntimeException("\n\nFailed to send login notification", e);

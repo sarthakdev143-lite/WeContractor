@@ -25,11 +25,11 @@ public class Plot {
     private ObjectId id;
     private String title;
     private String description;
-    private String discount;
     private String location;
-    private Double price;
-    private Double length;
     private String plotType;
+    private Double price;
+    private Double discount;
+    private Double length;
     private Double breadth;
     private User createdBy;
     private List<Float> rating;

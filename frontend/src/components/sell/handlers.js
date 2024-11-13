@@ -112,23 +112,28 @@ export const deleteFromCloudinary = async (public_id, type) => {
 export const onRemove = async (index, type, setFormData) => {
     console.log(`Removing file at index ${index} of type ${type}`);
     setFormData(prev => {
-        const newFiles = [...prev[type]];
-        const removedFile = newFiles[index];
+        if (Array.isArray(prev[type])) {
+            const newFiles = [...prev[type]];
+            const removedFile = newFiles[index];
 
-        console.log('File to be removed:', removedFile);
+            console.log('File to be removed:', removedFile);
 
-        if (removedFile && removedFile.public_id) {
-            console.log('Calling deleteFromCloudinary with public_id:', removedFile.public_id);
-            deleteFromCloudinary(removedFile.public_id, type)
-                .then(() => console.log('File deleted from Cloudinary'))
-                .catch(error => console.error('Error deleting file from Cloudinary:', error));
+            if (removedFile && removedFile.public_id) {
+                console.log('Calling deleteFromCloudinary with public_id:', removedFile.public_id);
+                deleteFromCloudinary(removedFile.public_id, type)
+                    .then(() => console.log('File deleted from Cloudinary'))
+                    .catch(error => console.error('Error deleting file from Cloudinary:', error));
+            } else {
+                console.log('No public_id found for the file, skipping Cloudinary deletion');
+            }
+
+            newFiles.splice(index, 1);
+            console.log('# Updated files array:', newFiles);
+            return { ...prev, [type]: newFiles };
         } else {
-            console.log('No public_id found for the file, skipping Cloudinary deletion');
+            console.log(`${type} is not an array, skipping file removal.`);
+            return prev;
         }
-
-        newFiles.splice(index, 1);
-        console.log('# Updated files array:', newFiles);
-        return { ...prev, [type]: newFiles };
     });
 };
 

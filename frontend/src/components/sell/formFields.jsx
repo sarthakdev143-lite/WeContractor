@@ -71,7 +71,7 @@ export const TagInput = ({ tags, onKeyDown, onRemove }) => (
 );
 
 
-export const FileUploader = ({ label, files, onRemove, getRootProps, getInputProps, iconClass, acceptedFormats }) => {
+export const FileUploader = ({ label, files = [], onRemove, getRootProps, getInputProps, iconClass, acceptedFormats }) => {
     const fileType = label.toLowerCase().replace(/s$/, ''); // This will be either 'image' or 'video
 
     return (
@@ -97,7 +97,7 @@ export const FileUploader = ({ label, files, onRemove, getRootProps, getInputPro
                 </div>
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
-                {files.map((file, index) => (
+                {Array.isArray(files) && files.map((file, index) => (
                     <div key={index} className="relative w-44 mt-4">
                         {file.url.match(/\.(jpeg|jpg|gif|png)$/) != null ? (
                             <div className="relative w-full pb-[100%] overflow-hidden bg-black rounded-md">
@@ -105,6 +105,8 @@ export const FileUploader = ({ label, files, onRemove, getRootProps, getInputPro
                                     src={file.url}
                                     alt={`preview ${index}`}
                                     className="absolute top-0 left-0 w-full h-full object-contain"
+                                    width={1000}
+                                    height={600}
                                 />
                             </div>
                         ) : (
