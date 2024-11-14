@@ -1,5 +1,6 @@
 package github.sarthakdev.backend.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -13,6 +14,7 @@ import github.sarthakdev.backend.model.Plot;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.repository.PlotRepository;
 import github.sarthakdev.backend.repository.UserRepository;
+import jakarta.validation.Valid;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,8 @@ public class PlotService {
     private final UserRepository userRepository;
 
     @Transactional
-    public Plot savePlot(PlotDTO plotDTO) {
+    public Plot savePlot(@Valid PlotDTO plotDTO) {
+        // Map PlotDTO to Plot entity
         Plot plot = mapToPlot(plotDTO);
 
         // Get current authenticated user
@@ -30,9 +33,25 @@ public class PlotService {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username).orElse(null);
 
+        // Validate that user exists
+        if (user == null) {
+            System.out.printf("\n\nAuthentication : %s\nUsername : %s\n\n", authentication, username);
+            throw new IllegalStateException("Authenticated user not found.");
+        }
+
+        // Initialize plot list if null and add plot
+        List<Plot> plots = user.getPlots();
+        if (plots == null)
+            plots = new ArrayList<>();
+        plots.add(plot);
+        user.setPlots(plots);
         plot.setCreatedBy(user);
+
+        // Log the plot and user information
         System.out.println("\n\nSaving Plot :- \n" + plot + "\n\nPlot Created By :-\n"
                 + UserService.printUserDetails(user) + "\n\n");
+
+        // Save the plot entity to the database
         return plotRepository.save(plot);
     }
 

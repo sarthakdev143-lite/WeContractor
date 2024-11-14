@@ -45,10 +45,10 @@ export const AmenitiesSelector = ({ selectedAmenities, onToggle, amenities }) =>
     </div>
 );
 
-export const TagInput = ({ tags, onKeyDown, onRemove }) => (
+export const TagInput = ({ tags, onKeyDown, onRemove, onPaste }) => (
     <div>
-        <label htmlFor="tags" title='Adding tags could help your plot be found easily by buyers.' className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-            Tags <i title='Tags are the keywords related to your plot' className="ri-information-line ml-1 text-gray-500"></i><i className="ml-1.5">(optional)</i>
+        <label htmlFor="tags" title="Adding tags could help your plot be found easily by buyers." className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+            Tags <i title="Tags are the keywords related to your plot" className="ri-information-line ml-1 text-gray-500"></i><i className="ml-1.5">(optional)</i>
         </label>
         <div className="mt-1 flex flex-wrap gap-2 p-2 border border-gray-300 rounded-md">
             {tags.map((tag, index) => (
@@ -65,12 +65,11 @@ export const TagInput = ({ tags, onKeyDown, onRemove }) => (
                 className="flex-grow focus:outline-none"
                 placeholder="Type and press Space to add tags"
                 onKeyDown={onKeyDown}
+                onPaste={onPaste}
             />
         </div>
     </div>
 );
-
-
 export const FileUploader = ({ label, files = [], onRemove, getRootProps, getInputProps, iconClass, acceptedFormats }) => {
     const fileType = label.toLowerCase().replace(/s$/, ''); // This will be either 'image' or 'video
 

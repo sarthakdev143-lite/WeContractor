@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { fieldConfig, plotTypes, amenitiesList } from '@/components/sell/constants.js';
 import { PlotTypeSelector, AmenitiesSelector, TagInput, FileUploader, SubmitButton } from '@/components/sell/formFields.jsx';
 import { handleChange, handleAmenityToggle, handleTagInput, removeTag, onDrop, onRemove } from '@/components/sell/handlers.js';
-import { validateForm, formatIndianCurrency } from '@/components/sell/utils.js';
+import { formatIndianCurrency } from '@/components/sell/utils.js';
 import { StatusMessage } from '@/components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '@/components/Helper.js';
 import withAuth from '@/components/WithAuth.js';
@@ -36,7 +36,7 @@ const Sell = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // First sanitize the form data
+        // Sanitize form data
         const sanitizedData = sanitizeFormData(formData);
 
         // Validate the sanitized data
@@ -49,36 +49,36 @@ const Sell = () => {
             return;
         }
 
-        // Proceed with your existing validation if needed
-        // const validationErrors = validateForm(sanitizedData);
-        // if (Object.keys(validationErrors).length > 0) {
-        //     setFormErrors(validationErrors);
-        //     setSubmitStatus("error");
-        //     window.scrollTo({ top: 0, behavior: 'smooth' });
-        //     return;
-        // }
-
-        console.log("Submitting Plot: ", sanitizedData);
+        console.log("Submitting Plot:", sanitizedData);
         setLoading(true);
 
         try {
-            const response = await MYAXIOS.post('/api/plots', sanitizedData);
-            console.log("API response: ", response);
+            const response = await MYAXIOS.post('/api/plots', sanitizedData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`, 
+                }
+            });
+            console.log("API response:", response);
+
             setSubmitStatus("success");
             setFormErrors({});
             setFormData({
                 title: "", description: "", location: "", price: "", plotType: "",
                 discount: "", images: [], videos: [], amenities: [], tags: []
             });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
-            console.error("API error: ", error);
+            console.error("API error:", error);
+
+            const apiErrorMessage = error.response?.data?.message || "An error occurred. Please try again.";
+            setFormErrors({ apiError: apiErrorMessage });
             setSubmitStatus("error");
-            setFormErrors({ apiError: error.message });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } finally {
             setLoading(false);
         }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
@@ -173,6 +173,7 @@ const Sell = () => {
                         <TagInput
                             tags={formData.tags}
                             onKeyDown={(e) => handleTagInput(e, setFormData)}
+                            onPaste={(e) => handleTagInput(e, setFormData)}
                             onRemove={(tag) => removeTag(tag, setFormData)}
                         />
 

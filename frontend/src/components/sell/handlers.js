@@ -21,7 +21,17 @@ export const handleAmenityToggle = (amenity, setFormData) => {
 };
 
 export const handleTagInput = (e, setFormData) => {
-    if (e.key === ' ' && e.target.value.trim()) {
+    if (e.type === 'paste') {
+        // Get pasted data, split by whitespace/newline, and remove any empty entries
+        const pastedData = e.clipboardData.getData('Text').split(/\s+/).filter(Boolean);
+        if (pastedData.length) {
+            setFormData(prev => ({
+                ...prev,
+                tags: [...prev.tags, ...pastedData]
+            }));
+            e.preventDefault();
+        }
+    } else if (e.key === ' ' && e.target.value.trim()) {
         const newTag = e.target.value.trim();
         setFormData(prev => ({
             ...prev,
