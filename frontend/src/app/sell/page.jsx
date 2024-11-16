@@ -10,7 +10,10 @@ import { StatusMessage } from '@/components/sell/StatusMessage.jsx';
 import { MYAXIOS } from '@/components/Helper.js';
 import withAuth from '@/components/WithAuth.js';
 import { TitleField, DescriptionField, LengthField, BreadthField, AreaField, LocationField, PriceField, DiscountField, PricePerSqftField, PriceAfterDiscountField } from './FormFields';
-import { sanitizeFormData, validateSanitizedData } from '@/components/sell/formSanitizer'
+import { sanitizeFormData, validateSanitizedData } from '@/components/sell/formSanitizer';
+import { ToastContainer } from 'react-toastify';
+import { notify } from '@/components/notifications';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Sell = () => {
     const [formData, setFormData] = useState({
@@ -55,7 +58,7 @@ const Sell = () => {
         try {
             const response = await MYAXIOS.post('/api/plots', sanitizedData, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`, 
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                 }
             });
             console.log("API response:", response);
@@ -67,15 +70,17 @@ const Sell = () => {
                 discount: "", images: [], videos: [], amenities: [], tags: []
             });
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0 });
+            notify.success("Plot Listed Successfully..")
+
         } catch (error) {
-            console.error("API error:", error);
+            window.scrollTo({ top: 0 });
+            console.error("API error : ", error);
 
             const apiErrorMessage = error.response?.data?.message || "An error occurred. Please try again.";
             setFormErrors({ apiError: apiErrorMessage });
             setSubmitStatus("error");
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         } finally {
             setLoading(false);
         }
@@ -216,6 +221,18 @@ const Sell = () => {
 
                 <SubmitButton />
             </form>
+            <ToastContainer
+                position="top-right"
+                autoClose={10000}
+                limit={3}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
         </div>
     );
 }

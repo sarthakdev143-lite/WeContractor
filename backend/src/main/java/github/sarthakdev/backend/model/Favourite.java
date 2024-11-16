@@ -2,6 +2,7 @@ package github.sarthakdev.backend.model;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Document(collection = "favourites")
@@ -32,4 +34,7 @@ public class Favourite {
 
     @CreatedDate
     private Date createdAt;
+
+    @LastModifiedDate
+    private Instant lastModified;
 }

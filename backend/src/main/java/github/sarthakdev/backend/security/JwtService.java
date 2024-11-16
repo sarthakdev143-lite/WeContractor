@@ -24,9 +24,9 @@ public class JwtService {
 
     private String secretKey = "doiwuieuqhkni1ug12ug31y2eui1make32we341wetuey12ueh8eh12eiu1j2ei1uheui1h21lh1893ur1cl3irhq3iulrqeurhwe90rw89euirwet";
 
-    private long tokenExpirationTime = 1000 * 60 * 60; // 1 hour
+    private long tokenExpirationTime = 1000 * 60 * 60 * 3; // 3 hour
 
-    private long refreshTokenExpirationTime = 1000 * 60 * 60 * 7; // 7 hours
+    private long refreshTokenExpirationTime = 1000 * 60 * 60 * 24; // 24 hours
 
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);

@@ -1,13 +1,16 @@
 package github.sarthakdev.backend.model;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import github.sarthakdev.backend.dto.PlotOwner;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +34,7 @@ public class Plot {
     private Double discount;
     private Double length;
     private Double breadth;
-    private User createdBy;
+    private PlotOwner plotOwner;
     private List<Float> rating;
     private List<String> imageUrls;
     private List<String> videoUrls;
@@ -41,4 +44,7 @@ public class Plot {
 
     @CreatedDate
     private Date createdAt;
+
+    @LastModifiedDate
+    private Instant lastModified;
 }

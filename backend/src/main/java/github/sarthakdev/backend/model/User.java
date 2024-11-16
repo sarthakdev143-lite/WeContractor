@@ -7,6 +7,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -54,13 +55,17 @@ public class User {
     private List<Favourite> favourites;
 
     private List<Transaction> transactions;
-    private List<Plot> plots;
 
     @DBRef
+    private List<Plot> plots;
+
     private List<BankAccount> bankAccounts;
 
     @CreatedDate
     private Instant createdAt;
+
+    @LastModifiedDate
+    private Instant lastModified;
 
     private int loginAttempts = 0;
     private LocalDateTime lastLoginAttemptTime;

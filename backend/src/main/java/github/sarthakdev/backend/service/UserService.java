@@ -178,7 +178,8 @@ public class UserService {
         // Send the login link to the user's email
         try {
             emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to user's email
-            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who Initiated login :-\n" + printUserDetails(user) + "\n\n");
+            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who Initiated login :-\n"
+                    + printUserDetails(user) + "\n\n");
             return "Login verification link sent to your email";
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send login verification email", e);
@@ -355,4 +356,8 @@ public class UserService {
         return userDashboardResponse;
     }
 
+    public User findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("\n\nUser not found with username : " + username));
+    }
 }

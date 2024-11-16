@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                                                                 "User not found with username or email: "
                                                                                 + usernameOrEmail)));
 
-                System.out.println("User found: " + user);
+                System.out.printf("User found :-\n%s\n\n", UserService.printUserDetails(user));
 
                 return org.springframework.security.core.userdetails.User.builder()
                                 .username(user.getUsername())

@@ -65,6 +65,7 @@ const VerifyLoginContent = () => {
                         </div>
                         <h2 className="text-2xl font-bold text-gray-800">Verifying your login...</h2>
                         <p className="mt-2 text-gray-500">Please wait while we verify your login attempt.</p>
+                        <span className='mt-2 text-red-600'>Do not Refresh the Page.</span>
                     </>
                 )}
 
