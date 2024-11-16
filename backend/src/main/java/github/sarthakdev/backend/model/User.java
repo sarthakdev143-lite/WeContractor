@@ -56,7 +56,6 @@ public class User {
 
     private List<Transaction> transactions;
 
-    @DBRef
     private List<Plot> plots;
 
     private List<BankAccount> bankAccounts;
