@@ -30,7 +30,7 @@ public class Plot {
     private String description;
     private String location;
     private String plotType;
-    private Double price;
+    private Double price;   
     private Double discount;
     private Double length;
     private Double breadth;
@@ -41,6 +41,8 @@ public class Plot {
     private List<String> tags;
     private List<String> amenities;
     private List<Double> priceHistory;
+    private Boolean isSold = false;
+    private Long totalViews = 0L;
 
     @CreatedDate
     private Date createdAt;

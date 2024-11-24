@@ -23,6 +23,10 @@ public class PlotService {
     private final UserRepository userRepository;
     private final UserService userService;
 
+    public List<Plot> getAllPlots() {
+        return plotRepository.findAll();
+    }
+
     @Transactional
     public Plot savePlot(PlotDTO plotDTO, User user) {
         System.out.println("\n\nRequest to save new Plot :-");

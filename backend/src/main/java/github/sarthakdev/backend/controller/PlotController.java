@@ -5,12 +5,16 @@ import org.springframework.web.bind.annotation.*;
 
 import github.sarthakdev.backend.dto.ErrorResponse;
 import github.sarthakdev.backend.dto.PlotDTO;
+import github.sarthakdev.backend.dto.PlotResponseDTO;
 import github.sarthakdev.backend.model.Plot;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.security.JwtService;
 import github.sarthakdev.backend.service.PlotService;
 import github.sarthakdev.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
 import jakarta.validation.Valid;
 
 @RestController
@@ -22,6 +26,42 @@ public class PlotController {
     private final PlotService plotService;
     private final UserService userService;
     private final JwtService jwtService;
+
+    @GetMapping
+    public ResponseEntity<?> getAllPlots() {
+        System.out.println("\n\nFetching all Plots...\n\n");
+        try {
+            List<Plot> plots = plotService.getAllPlots();
+            System.out.println("\n\nFetched " + plots.size() + " plots.\n\n");
+            plots.forEach(plot -> System.out.print(plot.getTitle() + ", "));
+
+            List<PlotResponseDTO> plotResponses = plots.stream()
+                    .map(plot -> {
+                        return PlotResponseDTO.builder()
+                                .image(plot.getImageUrls() != null && !plot.getImageUrls().isEmpty()
+                                        ? plot.getImageUrls().get(0)
+                                        : "https://via.placeholder.com/500x300")
+                                .title(plot.getTitle())
+                                .description(plot.getDescription())
+                                .location(plot.getLocation())
+                                .price(plot.getPrice())
+                                .length(plot.getLength())
+                                .breadth(plot.getBreadth())
+                                .soldBy(plot.getPlotOwner() != null ? plot.getPlotOwner().getFullName() : "Unknown")
+                                .rating(calculateAverageRating(plot.getRating()))
+                                .dateAdded(plot.getCreatedAt().toString())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            System.out.println("\n\nReturning Plot Response DTOs: " + plotResponses + "\n\n");
+            return ResponseEntity.ok(plotResponses);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Failed to fetch plots: " + e.getMessage()));
+        }
+    }
 
     @PostMapping
     public ResponseEntity<?> createPlot(@Valid @RequestBody PlotDTO plotDTO,
@@ -42,10 +82,21 @@ public class PlotController {
 
             return ResponseEntity.ok(savedPlot);
         } catch (Exception e) {
-            e.printStackTrace(); // Detailed stack trace for debugging
+            e.printStackTrace();
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse("\n\n\nFailed to create plot listing: " + e.getMessage() +
                             " | Cause : " + (e.getCause() != null ? e.getCause().getMessage() : "No cause")));
         }
+    }
+
+    private double calculateAverageRating(List<Float> ratings) {
+        if (ratings == null || ratings.isEmpty())
+            return 0.0;
+
+        double sum = 0.0;
+        for (Float rating : ratings)
+            sum += rating;
+
+        return sum / ratings.size();
     }
 }

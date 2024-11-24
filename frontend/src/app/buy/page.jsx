@@ -3,36 +3,66 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { MYAXIOS } from '@/components/Helper';
 
 const Buy = () => {
-    const [properties, setProperties] = useState([
-        { image: "https://plus.unsplash.com/premium_photo-1669735480838-a070c423b961?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Premium Residential Plot", description: "A spacious residential plot located in a prime area, perfect for building your dream home.", location: "Phoenix Citadel, Indore", price: 2000000, length: 50, breadth: 40, soldBy: "Realty Estates", rating: 3.5, dateAdded: new Date("Sat Oct 01 2024 12:30:00") },
-        { image: "https://images.unsplash.com/photo-1637555754372-54538a035312?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Luxurious Villa", description: "A luxurious villa with modern amenities, perfect for family gatherings and relaxation.", location: "Villa Heights, Mumbai", price: 5000000, length: 80, breadth: 60, soldBy: "Realty Estates", rating: 4.5, dateAdded: new Date("Sun Oct 02 2024 15:45:30") },
-        { image: "https://images.unsplash.com/photo-1506695041619-5dd4f46960b7?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Apartment in the City", description: "A comfortable and stylish apartment located in the heart of the city, perfect for solo travelers.", location: "City Square, New York", price: 1000000, length: 40, breadth: 30, soldBy: "Realty Estates", rating: 2.5, dateAdded: new Date("Mon Oct 03 2024 10:00:45") },
-        { image: "https://images.unsplash.com/photo-1655367382408-59b9b8a11e92?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Cozy House", description: "A comfortable and spacious house located in the heart of the city, perfect for solo travelers.", location: "City Square, New York", price: 1000000, length: 40, breadth: 30, soldBy: "Realty Estates", rating: 2.5, dateAdded: new Date("Tue Oct 04 2024 09:15:20") },
-        { image: "https://plus.unsplash.com/premium_photo-1674019235838-df82b9c83f4e?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Elegant Plot", description: "A beautiful plot with scenic views, perfect for a serene home.", location: "Green Valley, Shimla", price: 1500000, length: 60, breadth: 40, soldBy: "Hill Homes", rating: 4.0, dateAdded: new Date("Wed Oct 05 2024 14:20:35") },
-        { image: "https://images.unsplash.com/photo-1587745890135-20db8c79b027?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Seaside Villa", description: "A luxurious villa overlooking the ocean, offering privacy and peace.", location: "Palm Beach, Goa", price: 8000000, length: 120, breadth: 100, soldBy: "Beachfront Estates", rating: 4.8, dateAdded: new Date("Thu Oct 05 2024 18:45:50") },
-        { image: "https://images.unsplash.com/photo-1586859821520-523558cbebe8?q=80&w=1525&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Modern City Plot", description: "A modern plot in the heart of the bustling city.", location: "Tech Park, Bangalore", price: 2500000, length: 55, breadth: 45, soldBy: "Urban Landmarks", rating: 3.8, dateAdded: new Date("Fri Oct 01 2024 11:30:00") },
-        { image: "https://images.unsplash.com/photo-1586860051507-b798d4821d2a?q=80&w=1525&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Countryside Plot", description: "A tranquil plot away from the city, perfect for building a farmhouse.", location: "Rural Hills, Kerala", price: 1200000, length: 90, breadth: 70, soldBy: "Nature Estates", rating: 4.2, dateAdded: new Date("Sat Oct 08 2023 08:00:15") },
-        { image: "https://images.unsplash.com/photo-1635548758456-241032d7a8f2?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Hillside Mansion", description: "A grand hillside mansion with panoramic views.", location: "Mountain View, Ooty", price: 9000000, length: 150, breadth: 120, soldBy: "Highland Realty", rating: 4.9, dateAdded: new Date("Sun Oct 09 2023 20:15:30") },
-        { image: "https://images.unsplash.com/photo-1506744272967-64058cba4bec?q=80&w=1530&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Luxury Apartments", description: "Premium luxury apartments in the city center.", location: "Metro Heights, Pune", price: 3500000, length: 50, breadth: 40, soldBy: "Skyline Group", rating: 4.5, dateAdded: new Date("Mon Oct 10 2022 17:30:45") },
-        { image: "https://plus.unsplash.com/premium_photo-1674019234994-eceabbdd091d?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Riverside Cottage", description: "A charming cottage near the river, ideal for a peaceful getaway.", location: "Riverbank, Manali", price: 3000000, length: 60, breadth: 50, soldBy: "Riverside Realty", rating: 4.3, dateAdded: new Date("Tue Oct 11 2023 12:05:25") },
-    ]);
+    // const [properties, setProperties] = useState([
+    //     { image: "https://plus.unsplash.com/premium_photo-1669735480838-a070c423b961?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Premium Residential Plot", description: "A spacious residential plot located in a prime area, perfect for building your dream home.", location: "Phoenix Citadel, Indore", price: 2000000, length: 50, breadth: 40, soldBy: "Realty Estates", rating: 3.5, dateAdded: new Date("Sat Oct 01 2024 12:30:00") },
+    //     { image: "https://images.unsplash.com/photo-1637555754372-54538a035312?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Luxurious Villa", description: "A luxurious villa with modern amenities, perfect for family gatherings and relaxation.", location: "Villa Heights, Mumbai", price: 5000000, length: 80, breadth: 60, soldBy: "Realty Estates", rating: 4.5, dateAdded: new Date("Sun Oct 02 2024 15:45:30") },
+    //     { image: "https://images.unsplash.com/photo-1506695041619-5dd4f46960b7?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Apartment in the City", description: "A comfortable and stylish apartment located in the heart of the city, perfect for solo travelers.", location: "City Square, New York", price: 1000000, length: 40, breadth: 30, soldBy: "Realty Estates", rating: 2.5, dateAdded: new Date("Mon Oct 03 2024 10:00:45") },
+    //     { image: "https://images.unsplash.com/photo-1655367382408-59b9b8a11e92?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Cozy House", description: "A comfortable and spacious house located in the heart of the city, perfect for solo travelers.", location: "City Square, New York", price: 1000000, length: 40, breadth: 30, soldBy: "Realty Estates", rating: 2.5, dateAdded: new Date("Tue Oct 04 2024 09:15:20") },
+    //     { image: "https://plus.unsplash.com/premium_photo-1674019235838-df82b9c83f4e?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Elegant Plot", description: "A beautiful plot with scenic views, perfect for a serene home.", location: "Green Valley, Shimla", price: 1500000, length: 60, breadth: 40, soldBy: "Hill Homes", rating: 4.0, dateAdded: new Date("Wed Oct 05 2024 14:20:35") },
+    //     { image: "https://images.unsplash.com/photo-1587745890135-20db8c79b027?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Seaside Villa", description: "A luxurious villa overlooking the ocean, offering privacy and peace.", location: "Palm Beach, Goa", price: 8000000, length: 120, breadth: 100, soldBy: "Beachfront Estates", rating: 4.8, dateAdded: new Date("Thu Oct 05 2024 18:45:50") },
+    //     { image: "https://images.unsplash.com/photo-1586859821520-523558cbebe8?q=80&w=1525&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Modern City Plot", description: "A modern plot in the heart of the bustling city.", location: "Tech Park, Bangalore", price: 2500000, length: 55, breadth: 45, soldBy: "Urban Landmarks", rating: 3.8, dateAdded: new Date("Fri Oct 01 2024 11:30:00") },
+    //     { image: "https://images.unsplash.com/photo-1586860051507-b798d4821d2a?q=80&w=1525&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Countryside Plot", description: "A tranquil plot away from the city, perfect for building a farmhouse.", location: "Rural Hills, Kerala", price: 1200000, length: 90, breadth: 70, soldBy: "Nature Estates", rating: 4.2, dateAdded: new Date("Sat Oct 08 2023 08:00:15") },
+    //     { image: "https://images.unsplash.com/photo-1635548758456-241032d7a8f2?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Hillside Mansion", description: "A grand hillside mansion with panoramic views.", location: "Mountain View, Ooty", price: 9000000, length: 150, breadth: 120, soldBy: "Highland Realty", rating: 4.9, dateAdded: new Date("Sun Oct 09 2023 20:15:30") },
+    //     { image: "https://images.unsplash.com/photo-1506744272967-64058cba4bec?q=80&w=1530&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Luxury Apartments", description: "Premium luxury apartments in the city center.", location: "Metro Heights, Pune", price: 3500000, length: 50, breadth: 40, soldBy: "Skyline Group", rating: 4.5, dateAdded: new Date("Mon Oct 10 2022 17:30:45") },
+    //     { image: "https://plus.unsplash.com/premium_photo-1674019234994-eceabbdd091d?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", title: "Riverside Cottage", description: "A charming cottage near the river, ideal for a peaceful getaway.", location: "Riverbank, Manali", price: 3000000, length: 60, breadth: 50, soldBy: "Riverside Realty", rating: 4.3, dateAdded: new Date("Tue Oct 11 2023 12:05:25") },
+    // ]);
+    const [properties, setProperties] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [sortType, setSortType] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [filteredProperties, setFilteredProperties] = useState(properties);
+    const [filteredProperties, setFilteredProperties] = useState([]);
     const priceSliderRef = useRef(null);
     const plotSizeSliderRef = useRef(null);
+
+    // Fetch properties from API
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                setIsLoading(true);
+                const response = await MYAXIOS.get('/api/plots');
+
+                const formattedProperties = response.data.map(prop => ({
+                    ...prop,
+                    // dateAdded: new Date(prop.dateAdded)
+                }));
+
+                console.log("formattedProperties : ", formattedProperties)
+
+                setProperties(formattedProperties);
+                setIsLoading(false);
+            } catch (err) {
+                setError('Failed to fetch properties');
+                setIsLoading(false);
+                console.error('Error fetching properties:', err);
+            }
+        };
+
+        fetchProperties();
+    }, []);
 
     const { minPrice, maxPrice, minPlotSize, maxPlotSize } = useMemo(() => {
         const prices = properties.map(property => property.price);
         const plotSizes = properties.map(property => property.length * property.breadth);
         return {
-            minPrice: Math.min(...prices),
-            maxPrice: Math.max(...prices),
-            minPlotSize: Math.min(...plotSizes),
-            maxPlotSize: Math.max(...plotSizes)
+            minPrice: prices.length ? Math.min(...prices) : 0,
+            maxPrice: prices.length ? Math.max(...prices) : 0,
+            minPlotSize: plotSizes.length ? Math.min(...plotSizes) : 0,
+            maxPlotSize: plotSizes.length ? Math.max(...plotSizes) : 0
         };
     }, [properties]);
 
@@ -42,10 +72,13 @@ const Buy = () => {
 
     // Memoize filterProperties to prevent recreation on every render
     const filterProperties = useCallback(() => {
+        if (properties.length === 0) return;
+
         const filtered = properties.filter(
             (property) =>
                 (property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    property.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
+                    property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    property.tags.toLowerCase().includes(searchQuery.toLowerCase())) &&
                 property.price >= priceRange[0] &&
                 property.price <= priceRange[1] &&
                 (property.length * property.breadth) >= plotSizeRange[0] &&
@@ -54,11 +87,11 @@ const Buy = () => {
         setFilteredProperties(filtered);
     }, [searchQuery, priceRange, plotSizeRange, properties]);
 
-    // Update effect with memoized filterProperties in dependency array
     useEffect(() => {
         filterProperties();
     }, [filterProperties]);
 
+    // Effect to update price and plot size ranges
     useEffect(() => {
         setPriceRange([minPrice, maxPrice]);
         setPlotSizeRange([minPlotSize, maxPlotSize]);
@@ -124,7 +157,6 @@ const Buy = () => {
         return ((value - min) / (max - min)) * 100;
     };
 
-
     const renderStars = (rating) => {
         const fullStars = Math.floor(rating);
         const halfStar = rating % 1 !== 0;
@@ -144,14 +176,22 @@ const Buy = () => {
     };
 
     const getTimeSinceAdded = (dateAdded) => {
+        // Handle non-standard timezone strings like "IST"
+        const standardizedDate = dateAdded.replace("IST", "GMT+0530");
         const now = new Date();
-        const added = new Date(dateAdded);
+        const added = new Date(standardizedDate);
+        // console.log("Now : " + now + "\nDate Added : " + added + "\nParam : " + dateAdded);
+
+        if (isNaN(added.getTime())) {
+            return "Invalid Date Provided";
+        }
+
         const diffTime = Math.abs(now - added);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
         const diffMinutes = Math.ceil(diffTime / (1000 * 60));
 
-        if (diffMinutes < 1) return 'Just now';
+        if (diffMinutes <= 1) return 'Just now';
         if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
         if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
         if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
@@ -334,7 +374,7 @@ const Buy = () => {
                 <div className="flex flex-wrap justify-center gap-8 w-full">
                     {filteredProperties.length > 0 ? (
                         filteredProperties.map((property, index) => (
-                            <Link href={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit">
+                            <Link href={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit shadow-2xl">
                                 <div className="flex flex-col bg-gray-50 rounded-lg shadow-lg overflow-hidden">
                                     <div className="h-48 sm:h-64 md:h-72 bg-slate-300 relative">
                                         <Image
@@ -351,15 +391,15 @@ const Buy = () => {
                                     </div>
                                     <div className="p-4 flex flex-col gap-2">
                                         <p className="text-xl font-bold text-gray-800">{property.title}</p>
-                                        <p className="text-sm text-gray-600">{property.description}</p>
-                                        <p className="text-sm text-gray-700"><span className="font-semibold">Location:</span> {property.location}</p>
-                                        <p className="text-sm text-gray-700 font-semibold">Price: <span className='text-lg'>₹{formatIndianPrice(property.price)}</span></p>
-                                        <p className="text-sm text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = <b className='text-lg'>{property.length * property.breadth} sq. feet</b></p>
-                                        <p className="text-sm text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
-                                        <p className="text-sm text-gray-700 flex items-center">
+                                        <p className="text-lg text-gray-600 line-clamp-4">{property.description}</p>
+                                        <p className="text-lg text-gray-700"><span className="font-semibold">Location:</span> <span className="text-lg">{property.location}</span></p>
+                                        <p className="text-lg text-gray-700 font-semibold">Price: <span className='text-lg'>₹{formatIndianPrice(property.price)}</span></p>
+                                        <p className="text-lg text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = <b className='text-lg'>{property.length * property.breadth} sq. feet</b></p>
+                                        <p className="text-lg text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
+                                        {property.rating == 0 ? <></> : <p className="text-lg text-gray-700 flex items-center">
                                             <span className="font-semibold mr-2">Rating:</span>
-                                            {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating}/5)</span>
-                                        </p>
+                                            {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating.toFixed(1)}/5)</span>
+                                        </p>}
                                     </div>
                                 </div>
                             </Link>

@@ -90,11 +90,13 @@ public class AuthController {
         try {
             String ipAddress = getClientIp(servletRequest);
             String userAgent = servletRequest.getHeader("User-Agent");
-            System.out.println("\n\nToken : " + token + "\nIp-Address : " + ipAddress + "\nUser Agent : " + userAgent + "\n\n");
+            System.out.println(
+                    "\n\nToken : " + token + "\nIp-Address : " + ipAddress + "\nUser Agent : " + userAgent + "\n\n");
 
             String jwtToken = userService.verifyLoginToken(token, ipAddress, userAgent);
             return ResponseEntity.ok(new LoginResponse("Login successful", true, jwtToken));
         } catch (Exception e) {
+            System.out.println("\n\nError :-\n " + e.getMessage() + "\n\n");
             return ResponseEntity.badRequest()
                     .body(new LoginResponse(e.getMessage(), false, null));
         }
