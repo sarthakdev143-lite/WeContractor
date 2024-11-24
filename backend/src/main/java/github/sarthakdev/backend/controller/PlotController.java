@@ -50,6 +50,7 @@ public class PlotController {
                                 .soldBy(plot.getPlotOwner() != null ? plot.getPlotOwner().getFullName() : "Unknown")
                                 .rating(calculateAverageRating(plot.getRating()))
                                 .dateAdded(plot.getCreatedAt().toString())
+                                .tags(plot.getTags() != null ? String.join(", ", plot.getTags()) : "")
                                 .build();
                     })
                     .collect(Collectors.toList());

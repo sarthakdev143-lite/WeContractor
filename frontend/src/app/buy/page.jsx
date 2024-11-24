@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MYAXIOS } from '@/components/Helper';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Buy = () => {
     // const [properties, setProperties] = useState([
@@ -212,204 +213,215 @@ const Buy = () => {
 
     return (
         <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
-            <div id="filters-wrapper" className={`${toggleFilters ? 'max-h-[1000px]' : 'max-h-0'} overflow-hidden`}>
-                <div className="flex flex-wrap justify-between items-center bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 gap-6 rounded shadow-2xl relative">
-                    <div id="sort-by" className="sm:w-1/4 w-full flex items-center gap-3">
-                        <label htmlFor="sort" className="text-lg font-semibold text-gray-700 whitespace-nowrap">Sort By:</label>
-                        <select
-                            id="sort"
-                            value={sortType}
-                            onChange={handleSort}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ease-in-out duration-150"
-                        >
-                            <option value="">Featured</option>
-                            <option value="price-low-to-high">Price: Low to High</option>
-                            <option value="price-high-to-low">Price: High to Low</option>
-                            <option value="rating">Avg. Customer Review</option>
-                            <option value="newest">Newest Arrivals</option>
-                        </select>
-                    </div>
-                    <div id="price-range" className="sm:w-1/3 w-full flex flex-col gap-2">
-                        <label className="text-lg font-semibold text-gray-700">Price Range:</label>
-                        <div className="relative w-full h-6" ref={priceSliderRef}>
-                            <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
-                            <div
-                                className="absolute h-2 bg-blue-500 rounded-full top-2"
-                                style={{
-                                    left: `${getThumbPosition(priceRange[0], minPrice, maxPrice)}%`,
-                                    right: `${100 - getThumbPosition(priceRange[1], minPrice, maxPrice)}%`
-                                }}
-                            ></div>
-                            {[0, 1].map((index) => (
-                                <div
-                                    key={index}
-                                    className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
-                                    style={{ left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%` }}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        const handleMouseMove = (event) => {
-                                            handleThumbMove(index, event.clientX, priceRange, setPriceRange, minPrice, maxPrice, priceSliderRef);
-                                        };
-                                        const handleMouseUp = () => {
-                                            document.removeEventListener('mousemove', handleMouseMove);
-                                            document.removeEventListener('mouseup', handleMouseUp);
-                                        };
-                                        document.addEventListener('mousemove', handleMouseMove);
-                                        document.addEventListener('mouseup', handleMouseUp);
-                                    }}
-                                    onTouchStart={(e) => {
-                                        e.preventDefault();
-                                        const handleTouchMove = (event) => {
-                                            event.preventDefault();
-                                            handleThumbMove(
-                                                index,
-                                                event.touches[0].clientX,
-                                                priceRange,
-                                                setPriceRange,
-                                                minPrice,
-                                                maxPrice,
-                                                priceSliderRef
-                                            );
-                                        };
-                                        const handleTouchEnd = () => {
-                                            document.removeEventListener('touchmove', handleTouchMove);
-                                            document.removeEventListener('touchend', handleTouchEnd);
-                                        };
-                                        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                        document.addEventListener('touchend', handleTouchEnd);
-                                    }}
-                                ></div>
-                            ))}
+            {isLoading ? (
+                <div className="flex flex-col justify-center items-center">
+                    <LoadingSpinner type='circle' text='.' />
+                    <p className="text-gray-500 text-xl transform -translate-y-20">Loading plots...</p>
+                </div>
+            ) : error ? (
+                <div className="flex justify-center items-center">
+                    <p className="text-red-500 text-xl">{error}</p>
+                </div>
+            ) : (
+                <>
+                    <div id="filters-wrapper" className={`${toggleFilters ? 'max-h-[1000px]' : 'max-h-0'} overflow-hidden`}>
+                        <div className="flex flex-wrap justify-between items-center bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 gap-6 rounded shadow-2xl relative">
+                            <div id="sort-by" className="sm:w-1/4 w-full flex items-center gap-3">
+                                <label htmlFor="sort" className="text-lg font-semibold text-gray-700 whitespace-nowrap">Sort By:</label>
+                                <select
+                                    id="sort"
+                                    value={sortType}
+                                    onChange={handleSort}
+                                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ease-in-out duration-150"
+                                >
+                                    <option value="">Featured</option>
+                                    <option value="price-low-to-high">Price: Low to High</option>
+                                    <option value="price-high-to-low">Price: High to Low</option>
+                                    <option value="rating">Avg. Customer Review</option>
+                                    <option value="newest">Newest Arrivals</option>
+                                </select>
+                            </div>
+                            <div id="price-range" className="sm:w-1/3 w-full flex flex-col gap-2">
+                                <label className="text-lg font-semibold text-gray-700">Price Range:</label>
+                                <div className="relative w-full h-6" ref={priceSliderRef}>
+                                    <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
+                                    <div
+                                        className="absolute h-2 bg-blue-500 rounded-full top-2"
+                                        style={{
+                                            left: `${getThumbPosition(priceRange[0], minPrice, maxPrice)}%`,
+                                            right: `${100 - getThumbPosition(priceRange[1], minPrice, maxPrice)}%`
+                                        }}
+                                    ></div>
+                                    {[0, 1].map((index) => (
+                                        <div
+                                            key={index}
+                                            className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
+                                            style={{ left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%` }}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                const handleMouseMove = (event) => {
+                                                    handleThumbMove(index, event.clientX, priceRange, setPriceRange, minPrice, maxPrice, priceSliderRef);
+                                                };
+                                                const handleMouseUp = () => {
+                                                    document.removeEventListener('mousemove', handleMouseMove);
+                                                    document.removeEventListener('mouseup', handleMouseUp);
+                                                };
+                                                document.addEventListener('mousemove', handleMouseMove);
+                                                document.addEventListener('mouseup', handleMouseUp);
+                                            }}
+                                            onTouchStart={(e) => {
+                                                e.preventDefault();
+                                                const handleTouchMove = (event) => {
+                                                    event.preventDefault();
+                                                    handleThumbMove(
+                                                        index,
+                                                        event.touches[0].clientX,
+                                                        priceRange,
+                                                        setPriceRange,
+                                                        minPrice,
+                                                        maxPrice,
+                                                        priceSliderRef
+                                                    );
+                                                };
+                                                const handleTouchEnd = () => {
+                                                    document.removeEventListener('touchmove', handleTouchMove);
+                                                    document.removeEventListener('touchend', handleTouchEnd);
+                                                };
+                                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                                document.addEventListener('touchend', handleTouchEnd);
+                                            }}
+                                        ></div>
+                                    ))}
+                                </div>
+                                <div className="flex justify-between mt-2">
+                                    <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[0])}</span>
+                                    <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[1])}</span>
+                                </div>
+                            </div>
+                            <div id="plot-size-range" className="sm:w-1/3 w-full flex flex-col gap-2">
+                                <label className="text-lg font-semibold text-gray-700">Plot Size Range (sq ft):</label>
+                                <div className="relative w-full h-6" ref={plotSizeSliderRef}>
+                                    <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
+                                    <div
+                                        className="absolute h-2 bg-green-500 rounded-full top-2"
+                                        style={{
+                                            left: `${getThumbPosition(plotSizeRange[0], minPlotSize, maxPlotSize)}%`,
+                                            right: `${100 - getThumbPosition(plotSizeRange[1], minPlotSize, maxPlotSize)}%`
+                                        }}
+                                    ></div>
+                                    {[0, 1].map((index) => (
+                                        <div
+                                            key={index}
+                                            className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
+                                            style={{ left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%` }}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                const handleMouseMove = (event) => {
+                                                    handleThumbMove(index, event.clientX, plotSizeRange, setPlotSizeRange, minPlotSize, maxPlotSize, plotSizeSliderRef);
+                                                };
+                                                const handleMouseUp = () => {
+                                                    document.removeEventListener('mousemove', handleMouseMove);
+                                                    document.removeEventListener('mouseup', handleMouseUp);
+                                                };
+                                                document.addEventListener('mousemove', handleMouseMove);
+                                                document.addEventListener('mouseup', handleMouseUp);
+                                            }}
+                                            onTouchStart={(e) => {
+                                                e.preventDefault();
+                                                const handleTouchMove = (event) => {
+                                                    event.preventDefault();
+                                                    handleThumbMove(
+                                                        index,
+                                                        event.touches[0].clientX,
+                                                        plotSizeRange,
+                                                        setPlotSizeRange,
+                                                        minPlotSize,
+                                                        maxPlotSize,
+                                                        plotSizeSliderRef
+                                                    );
+                                                };
+                                                const handleTouchEnd = () => {
+                                                    document.removeEventListener('touchmove', handleTouchMove);
+                                                    document.removeEventListener('touchend', handleTouchEnd);
+                                                };
+                                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                                document.addEventListener('touchend', handleTouchEnd);
+                                            }}
+                                        ></div>
+                                    ))}
+                                </div>
+                                <div className="flex justify-between mt-2">
+                                    <span className="text-sm text-gray-600">{plotSizeRange[0]} sq ft</span>
+                                    <span className="text-sm text-gray-600">{plotSizeRange[1]} sq ft</span>
+                                </div>
+                            </div>
+                            <div id="search-bar" className="sm:w-1/4 w-full">
+                                <input
+                                    type="text"
+                                    placeholder="Search by title or location"
+                                    value={searchQuery}
+                                    onChange={handleSearch}
+                                    className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div id="reset-filters" className="w-full sm:w-auto">
+                                <button
+                                    onClick={resetFilters}
+                                    className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                                >
+                                    Reset Filters
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex justify-between mt-2">
-                            <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[0])}</span>
-                            <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[1])}</span>
-                        </div>
                     </div>
-                    <div id="plot-size-range" className="sm:w-1/3 w-full flex flex-col gap-2">
-                        <label className="text-lg font-semibold text-gray-700">Plot Size Range (sq ft):</label>
-                        <div className="relative w-full h-6" ref={plotSizeSliderRef}>
-                            <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
-                            <div
-                                className="absolute h-2 bg-green-500 rounded-full top-2"
-                                style={{
-                                    left: `${getThumbPosition(plotSizeRange[0], minPlotSize, maxPlotSize)}%`,
-                                    right: `${100 - getThumbPosition(plotSizeRange[1], minPlotSize, maxPlotSize)}%`
-                                }}
-                            ></div>
-                            {[0, 1].map((index) => (
-                                <div
-                                    key={index}
-                                    className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
-                                    style={{ left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%` }}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        const handleMouseMove = (event) => {
-                                            handleThumbMove(index, event.clientX, plotSizeRange, setPlotSizeRange, minPlotSize, maxPlotSize, plotSizeSliderRef);
-                                        };
-                                        const handleMouseUp = () => {
-                                            document.removeEventListener('mousemove', handleMouseMove);
-                                            document.removeEventListener('mouseup', handleMouseUp);
-                                        };
-                                        document.addEventListener('mousemove', handleMouseMove);
-                                        document.addEventListener('mouseup', handleMouseUp);
-                                    }}
-                                    onTouchStart={(e) => {
-                                        e.preventDefault();
-                                        const handleTouchMove = (event) => {
-                                            event.preventDefault();
-                                            handleThumbMove(
-                                                index,
-                                                event.touches[0].clientX,
-                                                plotSizeRange,
-                                                setPlotSizeRange,
-                                                minPlotSize,
-                                                maxPlotSize,
-                                                plotSizeSliderRef
-                                            );
-                                        };
-                                        const handleTouchEnd = () => {
-                                            document.removeEventListener('touchmove', handleTouchMove);
-                                            document.removeEventListener('touchend', handleTouchEnd);
-                                        };
-                                        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                        document.addEventListener('touchend', handleTouchEnd);
-                                    }}
-                                ></div>
-                            ))}
-                        </div>
-                        <div className="flex justify-between mt-2">
-                            <span className="text-sm text-gray-600">{plotSizeRange[0]} sq ft</span>
-                            <span className="text-sm text-gray-600">{plotSizeRange[1]} sq ft</span>
-                        </div>
-                    </div>
-                    <div id="search-bar" className="sm:w-1/4 w-full">
-                        <input
-                            type="text"
-                            placeholder="Search by title or location"
-                            value={searchQuery}
-                            onChange={handleSearch}
-                            className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    <div id="reset-filters" className="w-full sm:w-auto">
+                    <div className="flex justify-center mb-4">
                         <button
-                            onClick={resetFilters}
-                            className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                            onClick={() => setToggleFilters(!toggleFilters)}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                         >
-                            Reset Filters
+                            {toggleFilters ? 'Hide Filters' : 'Show Filters'}
                         </button>
                     </div>
-                </div>
-            </div>
-            <div className="flex justify-center mb-4">
-                <button
-                    onClick={() => setToggleFilters(!toggleFilters)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                >
-                    {toggleFilters ? 'Hide Filters' : 'Show Filters'}
-                </button>
-            </div>
-            <div className='flex flex-wrap gap-6'>
-                <div className="flex flex-wrap justify-center gap-8 w-full">
-                    {filteredProperties.length > 0 ? (
-                        filteredProperties.map((property, index) => (
-                            <Link href={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit shadow-2xl">
-                                <div className="flex flex-col bg-gray-50 rounded-lg shadow-lg overflow-hidden">
-                                    <div className="h-48 sm:h-64 md:h-72 bg-slate-300 relative">
-                                        <Image
-                                            src={property.image}
-                                            alt="property first-look"
-                                            width={400}
-                                            height={150}
-                                            loading="lazy"
-                                            className="w-full h-full"
-                                        />
-                                        <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
-                                            {getTimeSinceAdded(property.dateAdded)}
-                                        </span>
+                    <div className="flex flex-wrap justify-center gap-8 w-full">
+                        {filteredProperties.length > 0 ? (
+                            filteredProperties.map((property, index) => (
+                                <Link href={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit shadow-2xl">
+                                    <div className="flex flex-col bg-gray-50 rounded-lg shadow-lg overflow-hidden">
+                                        <div className="h-48 sm:h-64 md:h-72 bg-slate-300 relative">
+                                            <Image
+                                                src={property.image}
+                                                alt="property first-look"
+                                                width={400}
+                                                height={150}
+                                                loading="lazy"
+                                                className="w-full h-full"
+                                            />
+                                            <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
+                                                {getTimeSinceAdded(property.dateAdded)}
+                                            </span>
+                                        </div>
+                                        <div className="p-4 flex flex-col gap-2">
+                                            <p className="text-xl font-bold text-gray-800">{property.title}</p>
+                                            <p className="text-lg text-gray-600 line-clamp-4">{property.description}</p>
+                                            <p className="text-lg text-gray-700"><span className="font-semibold">Location:</span> <span className="text-lg">{property.location}</span></p>
+                                            <p className="text-lg text-gray-700 font-semibold">Price: <span className='text-lg'>₹{formatIndianPrice(property.price)}</span></p>
+                                            <p className="text-lg text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = <b className='text-lg'>{property.length * property.breadth} sq. feet</b></p>
+                                            <p className="text-lg text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
+                                            {property.rating == 0 ? <></> : <p className="text-lg text-gray-700 flex items-center">
+                                                <span className="font-semibold mr-2">Rating:</span>
+                                                {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating.toFixed(1)}/5)</span>
+                                            </p>}
+                                        </div>
                                     </div>
-                                    <div className="p-4 flex flex-col gap-2">
-                                        <p className="text-xl font-bold text-gray-800">{property.title}</p>
-                                        <p className="text-lg text-gray-600 line-clamp-4">{property.description}</p>
-                                        <p className="text-lg text-gray-700"><span className="font-semibold">Location:</span> <span className="text-lg">{property.location}</span></p>
-                                        <p className="text-lg text-gray-700 font-semibold">Price: <span className='text-lg'>₹{formatIndianPrice(property.price)}</span></p>
-                                        <p className="text-lg text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = <b className='text-lg'>{property.length * property.breadth} sq. feet</b></p>
-                                        <p className="text-lg text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
-                                        {property.rating == 0 ? <></> : <p className="text-lg text-gray-700 flex items-center">
-                                            <span className="font-semibold mr-2">Rating:</span>
-                                            {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating.toFixed(1)}/5)</span>
-                                        </p>}
-                                    </div>
-                                </div>
-                            </Link>
-                        ))
-                    ) : (
-                        <p className="text-lg text-gray-500">No properties found matching your criteria.</p>
-                    )}
-                </div>
-            </div>
-            <p className='mt-16 text-center text-gray-500'>You have reached the end.</p>
+                                </Link>
+                            ))
+                        ) : (
+                            <p className="text-lg text-gray-500">No properties found matching your criteria.</p>
+                        )}
+                    </div>
+                    <p className='mt-16 text-center text-gray-500'>You have reached the end.</p>
+                </>
+            )}
         </section >
     );
 };

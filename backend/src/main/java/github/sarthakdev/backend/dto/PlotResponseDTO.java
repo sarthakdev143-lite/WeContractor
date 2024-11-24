@@ -16,4 +16,5 @@ public class PlotResponseDTO {
     private String soldBy;  
     private Double rating;
     private String dateAdded;
+    private String tags;
 }
