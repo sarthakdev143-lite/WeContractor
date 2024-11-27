@@ -162,9 +162,9 @@ const UserPlots = () => {
             case 'newest':
                 return sortedList.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
             case 'available-first':
-                return sortedList.sort((a, b) => (a.isSold ? 1 : -1));
+                return sortedList.sort((a) => (a.isSold ? 1 : -1));
             case 'sold-first':
-                return sortedList.sort((a, b) => (b.isSold ? 1 : -1));
+                return sortedList.sort((b) => (b.isSold ? 1 : -1));
             default:
                 return sortedList;
         }
