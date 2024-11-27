@@ -66,8 +66,9 @@ const Sell = () => {
             setSubmitStatus("success");
             setFormErrors({});
             setFormData({
-                title: "", description: "", location: "", price: "", plotType: "",
-                discount: "", images: [], videos: [], amenities: [], tags: []
+                title: "", description: "", length: "", breadth: "", location: "",
+                price: "", plotType: "", discount: "", amenities: [],
+                images: [], videos: [], tags: []
             });
 
             window.scrollTo({ top: 0 });

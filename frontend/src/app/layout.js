@@ -29,10 +29,9 @@ export default function RootLayout({ children }) {
           href="/default-avatar.webp"
           as="image"
         />
-        <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
       </Head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50`}
       >
         <Navbar />
         <main className='px-4 pb-8 mt-4'>{children}</main>

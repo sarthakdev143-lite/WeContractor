@@ -5,6 +5,7 @@ import Link from 'next/link';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MYAXIOS } from '@/components/Helper';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Eye, MapPin, Tag, Ruler, CheckCircle, Star, Clock } from 'lucide-react';
 
 const Buy = () => {
     // const [properties, setProperties] = useState([
@@ -211,6 +212,17 @@ const Buy = () => {
         setPlotSizeRange([minPlotSize, maxPlotSize]);
     };
 
+    const formatTotalViews = (totalViews) => {
+        if (totalViews >= 100000000000) return ('100B+')
+        if (totalViews >= 1000000000) return (totalViews / 1000000000
+        ).toFixed(1) + 'B';
+        if (totalViews >= 1000000) return (totalViews / 1000000
+        ).toFixed(2) + 'M';
+        if (totalViews >= 1000) return (totalViews / 1000
+        ).toFixed(2) + 'K';
+        return totalViews;
+    };
+
     return (
         <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
             {isLoading ? (
@@ -385,32 +397,104 @@ const Buy = () => {
                     <div className="flex flex-wrap justify-center gap-8 w-full">
                         {filteredProperties.length > 0 ? (
                             filteredProperties.map((property, index) => (
-                                <Link href={`/view/${index}`} target='_blank' key={index} className="w-full sm:w-[45%] md:w-[30%] h-fit shadow-2xl">
-                                    <div className="flex flex-col bg-gray-50 rounded-lg shadow-lg overflow-hidden">
-                                        <div className="h-48 sm:h-64 md:h-72 bg-slate-300 relative">
+                                <Link
+                                    href={`/view/${index}`}
+                                    target='_blank'
+                                    key={index}
+                                    className="w-full sm:w-[45%] md:w-[30%] h-fit group perspective-1000"
+                                >
+                                    <div className="relative transform transition-all duration-500 ease-in-out 
+                                hover:-translate-y-2 hover:rotate-1 hover:scale-[1.02] 
+                                bg-white rounded-2xl shadow-lg overflow-hidden 
+                                border border-gray-100 hover:border-blue-100 
+                                hover:shadow-2xl">
+
+                                        {/* Image Section with Overlays */}
+                                        <div className="h-48 sm:h-64 md:h-72 relative overflow-hidden">
                                             <Image
                                                 src={property.image}
                                                 alt="property first-look"
                                                 width={400}
                                                 height={150}
                                                 loading="lazy"
-                                                className="w-full h-full"
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                             />
-                                            <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
-                                                {getTimeSinceAdded(property.dateAdded)}
-                                            </span>
+
+                                            {/* Top Overlay Tags */}
+                                            <div className="absolute top-0 left-0 right-0 flex justify-between p-3">
+                                                <div className="flex gap-2">
+                                                    <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs flex items-center">
+                                                        <Tag className="w-3 h-3 mr-1" />
+                                                        {property.plotType}
+                                                    </span>
+                                                </div>
+                                                <span className="bg-gray-800 bg-opacity-70 text-white px-2 py-1 rounded-full text-xs flex items-center">
+                                                    <Clock className="w-3 h-3 mr-1" />
+                                                    {getTimeSinceAdded(property.dateAdded)}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="p-4 flex flex-col gap-2">
-                                            <p className="text-xl font-bold text-gray-800">{property.title}</p>
-                                            <p className="text-lg text-gray-600 line-clamp-4">{property.description}</p>
-                                            <p className="text-lg text-gray-700"><span className="font-semibold">Location:</span> <span className="text-lg">{property.location}</span></p>
-                                            <p className="text-lg text-gray-700 font-semibold">Price: <span className='text-lg'>₹{formatIndianPrice(property.price)}</span></p>
-                                            <p className="text-lg text-gray-700"><span className="font-semibold">Plot Size:</span> {property.length}ft. x {property.breadth}ft. = <b className='text-lg'>{property.length * property.breadth} sq. feet</b></p>
-                                            <p className="text-lg text-gray-700"><span className="font-semibold">Sold By:</span> {property.soldBy}</p>
-                                            {property.rating == 0 ? <></> : <p className="text-lg text-gray-700 flex items-center">
-                                                <span className="font-semibold mr-2">Rating:</span>
-                                                {renderStars(property.rating)} <span className="ml-2 text-gray-600">({property.rating.toFixed(1)}/5)</span>
-                                            </p>}
+
+                                        {/* Content Section */}
+                                        <div className="p-4 space-y-3">
+                                            {/* Title and Views */}
+                                            <div className="flex justify-between items-start">
+                                                <h2 className="text-xl font-bold text-gray-800 line-clamp-2 flex-grow pr-2">
+                                                    {property.title}
+                                                </h2>
+                                                <div className="flex items-center text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+                                                    <Eye className="w-4 h-4 mr-1 text-blue-500" />
+                                                    <span className="text-xs font-medium">{formatTotalViews(property.totalViews)}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Description */}
+                                            <p className="text-sm text-gray-600 line-clamp-3 italic">
+                                                {property.description}
+                                            </p>
+
+                                            {/* Location */}
+                                            <div className="flex items-center text-gray-700 space-x-2">
+                                                <MapPin className="w-5 h-5 text-blue-500" />
+                                                <span className="text-sm truncate">{property.location}</span>
+                                            </div>
+
+                                            {/* Details Grid */}
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="bg-blue-50 p-2 rounded-lg flex items-center space-x-2">
+                                                    <span className="bg-blue-100 p-1.5 rounded-full">
+                                                        <Ruler className="w-4 h-4 text-blue-600" />
+                                                    </span>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500">Plot Size</p>
+                                                        <p className="text-sm font-semibold">{property.length}ft x {property.breadth}ft</p>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-green-50 p-2 rounded-lg flex items-center space-x-2">
+                                                    <span className="bg-green-100 p-1.5 rounded-full">
+                                                        <Star className="w-4 h-4 text-green-600" />
+                                                    </span>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500">Price</p>
+                                                        <p className="text-sm font-semibold text-green-700">
+                                                            ₹{formatIndianPrice(property.price)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Footer */}
+                                            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                                <p className="text-xs text-gray-500">Sold By: {property.soldBy}</p>
+                                                {property.rating > 0 && (
+                                                    <div className="flex items-center space-x-1">
+                                                        {renderStars(property.rating)}
+                                                        <span className="text-xs text-gray-600 ml-1">
+                                                            ({property.rating.toFixed(1)})
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>

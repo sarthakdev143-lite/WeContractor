@@ -3,8 +3,6 @@ package github.sarthakdev.backend.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import github.sarthakdev.backend.model.Plot;
-import github.sarthakdev.backend.model.Transaction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,8 +26,9 @@ public class UserDashboardResponse {
     private String status;
     private LocalDateTime createdAt;
     private String profilePictureUrl;
-    private List<String> roles;
-    private List<BankAccount> bankAccounts;
-    private List<Plot> plots;
-    private List<Transaction> transactions;
+    private List<String> roles;     
+    private int plotCount;
+    private int favouriteCount; 
+    private List<UserDashboardTransactionDTO> transactions;
+    private List<RecentActivity> recentActivities;
 }

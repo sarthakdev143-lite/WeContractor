@@ -13,6 +13,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import github.sarthakdev.backend.dto.BankAccount;
+import github.sarthakdev.backend.dto.PlotInUserDTO;
+import github.sarthakdev.backend.dto.RecentActivity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -56,9 +58,11 @@ public class User {
 
     private List<Transaction> transactions;
 
-    private List<Plot> plots;
+    private List<PlotInUserDTO> plots;
 
     private List<BankAccount> bankAccounts;
+
+    private List<RecentActivity> recentActivities;
 
     @CreatedDate
     private Instant createdAt;

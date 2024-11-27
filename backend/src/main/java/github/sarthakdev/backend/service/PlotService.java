@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import github.sarthakdev.backend.dto.PlotDTO;
+import github.sarthakdev.backend.dto.PlotInUserDTO;
 import github.sarthakdev.backend.dto.PlotOwner;
-import github.sarthakdev.backend.exception.UsernameNotFoundException;
 import github.sarthakdev.backend.model.Plot;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.repository.PlotRepository;
@@ -21,7 +21,6 @@ public class PlotService {
 
     private final PlotRepository plotRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
 
     public List<Plot> getAllPlots() {
         return plotRepository.findAll();
@@ -37,30 +36,29 @@ public class PlotService {
         Plot plot = mapToPlot(plotDTO);
         System.out.println("\n\nSuccessfully Mapped DTO to Plot.\n\n\n");
 
-        // Initialize plot list if null and add plot
-        List<Plot> plots = user.getPlots();
-        if (plots == null) {
-            System.out.println("\n\nUser has currently no Plots..!!\n\n");
-            plots = new ArrayList<>();
-        }
-        plots.add(plot);
-        user.setPlots(plots);
-        System.out
-                .println("\n\nSuccessfully Added Plot to User's Plots\n\n\nUpdated User's Plots : " + user.getPlots());
         plot.setPlotOwner(new PlotOwner(user.getFullName(), user.getUsername(), user.getEmail(), user.getVerified(),
                 user.getProfilePictureUrl(), user.getPhoneNumber()));
         System.out.printf("\n\nSuccessfully Set ` %s ` the Owner of Plot ` %s `.\n\n\n",
                 plot.getPlotOwner().getFullName(), plot.getTitle());
 
-        User updatedUser = userService.findUserByUsername(user.getUsername());
-        if (updatedUser != null) {
-            if (userRepository.save(updatedUser) != null)
+        plot = plotRepository.save(plot);
+
+        // Initialize plot list if null and add plot
+        List<PlotInUserDTO> plots = user.getPlots();
+        if (plots == null) {
+            System.out.println("\n\nUser has currently no Plots..!!\n\n");
+            plots = new ArrayList<>();
+        }
+        plots.add(new PlotInUserDTO(plot.getId(), plot.getTitle(), plot.getIsSold()));
+        user.setPlots(plots);
+        System.out
+                .println("\n\nSuccessfully Added Plot to User's Plots\n\n\nUpdated User's Plots : " + user.getPlots());
+
+        if (user != null) {
+            if (userRepository.save(user) != null)
                 System.out.println("\n\nSuccessfully updated User.\n\n");
             else
                 System.out.println("\n\nFailed to update User.\n\n");
-        } else {
-            System.out.println("\n\nUser not found in database.\n\n");
-            throw new UsernameNotFoundException("User who is registering the plot is not in DB. Something is wrong.");
         }
 
         // Log the plot and user information
@@ -68,7 +66,7 @@ public class PlotService {
                 UserService.printUserDetails(user));
 
         // Save the plot entity to the database
-        return plotRepository.save(plot);
+        return plot;
     }
 
     private Plot mapToPlot(PlotDTO plotDTO) {

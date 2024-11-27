@@ -18,16 +18,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import github.sarthakdev.backend.dto.PlotInUserDTO;
 import github.sarthakdev.backend.dto.SecureLoginRequest;
 import github.sarthakdev.backend.dto.SignupRequest;
 import github.sarthakdev.backend.dto.SignupResponse;
 import github.sarthakdev.backend.dto.UserDashboardResponse;
+import github.sarthakdev.backend.dto.UserDashboardTransactionDTO;
 import github.sarthakdev.backend.exception.UserAlreadyExistsException;
+import github.sarthakdev.backend.exception.UsernameNotFoundException;
 import github.sarthakdev.backend.model.LoginVerificationToken;
+import github.sarthakdev.backend.model.Plot;
 import github.sarthakdev.backend.model.Role;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.model.VerificationToken;
 import github.sarthakdev.backend.repository.LoginVerificationTokenRepository;
+import github.sarthakdev.backend.repository.PlotRepository;
 import github.sarthakdev.backend.repository.RoleRepository;
 import github.sarthakdev.backend.repository.UserRepository;
 import github.sarthakdev.backend.repository.VerificationTokenRepository;
@@ -42,6 +47,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PlotRepository plotRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final VerificationTokenRepository tokenRepository;
@@ -53,6 +59,20 @@ public class UserService {
 
     @Value("${FRONTEND_URL:http://localhost:3000}")
     private String frontendUrl;
+
+    @Transactional
+    public List<Plot> getUserPlots(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+
+        if (user != null) {
+            List<PlotInUserDTO> plotInUserDTO = user.get().getPlots();
+            List<Plot> plots = new ArrayList<>();
+            for (PlotInUserDTO plotInUser : plotInUserDTO)
+                plots.add(plotRepository.findById(plotInUser.getPlotId()).orElse(null));
+            return plots;
+        } else
+            throw new UsernameNotFoundException("User With Username : " + username + " - Not Found.");
+    }
 
     @Transactional
     public SignupResponse signup(@Validated SignupRequest userDTO) {
@@ -336,22 +356,38 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserDashboardResponse getUserDashboardData(String username) {
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserDashboardResponse userDashboardResponse = new UserDashboardResponse();
-        userDashboardResponse.setFullName(user.getFullName());
-        userDashboardResponse.setUsername(user.getUsername());
-        userDashboardResponse.setEmail(user.getEmail());
-        userDashboardResponse.setPhoneNumber(user.getPhoneNumber());
-        userDashboardResponse.setVerified(user.getVerified());
-        userDashboardResponse.setStatus(user.getStatus());
-        userDashboardResponse.setCreatedAt(user.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime());
-        userDashboardResponse.setProfilePictureUrl(user.getProfilePictureUrl());
-        userDashboardResponse.setRoles(user.getRoles().stream()
-                .map(role -> role.getName())
-                .toList());
+        List<UserDashboardTransactionDTO> transactionDTOs = user.getTransactions() != null
+                ? user.getTransactions().stream()
+                        .map(transaction -> UserDashboardTransactionDTO.builder()
+                                .transactionAmount(transaction.getTransactionAmount())
+                                .transactionDate(transaction.getTransactionDate())
+                                .build())
+                        .toList()
+                : null;
+
+        System.out.println("\n\nUser Plots :- \n" + user.getPlots() + "\n\n");
+        System.out.println("\n\nUser Favourites :- \n" + user.getFavourites() + "\n\n");
+
+        UserDashboardResponse userDashboardResponse = UserDashboardResponse.builder()
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .verified(user.getVerified())
+                .status(user.getStatus())
+                .createdAt(user.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .profilePictureUrl(user.getProfilePictureUrl())
+                .roles(user.getRoles().stream()
+                        .map(role -> role.getName())
+                        .toList())
+                .plotCount(user.getPlots() != null ? user.getPlots().size() : 0)
+                .favouriteCount(user.getFavourites() != null ? user.getFavourites().size() : 0)
+                .transactions(transactionDTOs)
+                .recentActivities(user.getRecentActivities())
+                .build();
 
         return userDashboardResponse;
     }

@@ -1,6 +1,6 @@
 package github.sarthakdev.backend.model;
 
-import java.time.Instant;
+import java.util.Date;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
@@ -33,10 +33,10 @@ public class Transaction {
     @DBRef
     private User seller;
 
-    private Double salePrice;
+    private Double transactionAmount;
 
     private String transactionType;
 
     @CreatedDate
-    private Instant transactionDate;
+    private Date transactionDate;    
 }

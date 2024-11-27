@@ -88,7 +88,7 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className="w-full bg-white">
+            <nav className="w-full bg-slate-50">
                 <div className="flex justify-between items-center py-4 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
                     <Link href="/" className="flex items-center">
                         <Image

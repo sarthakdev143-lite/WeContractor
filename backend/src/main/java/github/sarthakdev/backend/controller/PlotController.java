@@ -51,6 +51,8 @@ public class PlotController {
                                 .rating(calculateAverageRating(plot.getRating()))
                                 .dateAdded(plot.getCreatedAt().toString())
                                 .tags(plot.getTags() != null ? String.join(", ", plot.getTags()) : "")
+                                .plotType(plot.getPlotType())
+                                .totalViews(plot.getTotalViews())
                                 .build();
                     })
                     .collect(Collectors.toList());

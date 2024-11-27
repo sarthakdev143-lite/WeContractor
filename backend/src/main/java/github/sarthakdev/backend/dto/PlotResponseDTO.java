@@ -17,4 +17,6 @@ public class PlotResponseDTO {
     private Double rating;
     private String dateAdded;
     private String tags;
+    private String plotType;
+    private Long totalViews;
 }
