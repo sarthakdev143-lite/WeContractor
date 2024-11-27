@@ -5,7 +5,7 @@ import Link from 'next/link';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MYAXIOS } from '@/components/Helper';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Eye, MapPin, Tag, Ruler, CheckCircle, Star, Clock } from 'lucide-react';
+import { Eye, MapPin, Tag, Ruler, Star, Clock } from 'lucide-react';
 
 const Buy = () => {
     // const [properties, setProperties] = useState([
