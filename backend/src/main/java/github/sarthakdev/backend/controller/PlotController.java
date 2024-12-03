@@ -1,10 +1,12 @@
 package github.sarthakdev.backend.controller;
 
+import org.bson.types.ObjectId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import github.sarthakdev.backend.dto.ErrorResponse;
 import github.sarthakdev.backend.dto.PlotDTO;
+import github.sarthakdev.backend.dto.PlotListDTO;
 import github.sarthakdev.backend.dto.PlotResponseDTO;
 import github.sarthakdev.backend.model.Plot;
 import github.sarthakdev.backend.model.User;
@@ -38,6 +40,7 @@ public class PlotController {
             List<PlotResponseDTO> plotResponses = plots.stream()
                     .map(plot -> {
                         return PlotResponseDTO.builder()
+                                .id(plot.getId().toString())
                                 .image(plot.getImageUrls() != null && !plot.getImageUrls().isEmpty()
                                         ? plot.getImageUrls().get(0)
                                         : "https://via.placeholder.com/500x300")
@@ -67,7 +70,7 @@ public class PlotController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPlot(@Valid @RequestBody PlotDTO plotDTO,
+    public ResponseEntity<?> createPlot(@Valid @RequestBody PlotListDTO plotListDTO,
             @RequestHeader("Authorization") String authHeader) {
         try {
             System.out.println("Authorization Header : " + authHeader);
@@ -80,7 +83,7 @@ public class PlotController {
             System.out.println("User Found: " + UserService.printUserDetails(user));
 
             // Save the plot
-            Plot savedPlot = plotService.savePlot(plotDTO, user);
+            Plot savedPlot = plotService.savePlot(plotListDTO, user);
             System.out.println("Saved Plot: " + PlotService.printPlot(savedPlot));
 
             return ResponseEntity.ok(savedPlot);
@@ -89,6 +92,25 @@ public class PlotController {
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse("\n\n\nFailed to create plot listing: " + e.getMessage() +
                             " | Cause : " + (e.getCause() != null ? e.getCause().getMessage() : "No cause")));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPlot(@PathVariable ObjectId id) {
+        try {
+            System.out.println("\n\nFetching Plot For ID : " + id);
+            PlotDTO plot = plotService.getPlotById(id);
+            if (plot == null) {
+                return ResponseEntity.notFound().build();
+            }
+            System.out.println("\nPlot Title With ID : " + plot.getTitle() + "\n\n");
+            return ResponseEntity.ok(plot);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("\n\n\nFailed to fetch plot: " + e.getMessage() +
+                            " | Cause : " + (e.getCause() != null ? e.getCause().getMessage()
+                                    : "No cause")));
         }
     }
 

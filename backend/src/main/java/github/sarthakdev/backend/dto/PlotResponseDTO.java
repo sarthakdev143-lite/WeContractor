@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class PlotResponseDTO {
+    private String id;
     private String image;
     private String title;
     private String description;

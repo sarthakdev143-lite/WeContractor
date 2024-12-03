@@ -2,11 +2,14 @@ package github.sarthakdev.backend.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import github.sarthakdev.backend.dto.PlotListDTO;
 import github.sarthakdev.backend.dto.PlotDTO;
 import github.sarthakdev.backend.dto.PlotInUserDTO;
 import github.sarthakdev.backend.dto.PlotOwner;
@@ -22,18 +25,27 @@ public class PlotService {
     private final PlotRepository plotRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public List<Plot> getAllPlots() {
         return plotRepository.findAll();
     }
 
     @Transactional
-    public Plot savePlot(PlotDTO plotDTO, User user) {
+    public PlotDTO getPlotById(ObjectId id) {
+        Optional<Plot> plot = plotRepository.findById(id);
+        PlotDTO plotDTO = mapToDTO(plot.get());
+        System.out.println("\n\nReturning PlotDTO :-\n" + plotDTO);
+        return plotDTO;
+    }
+
+    @Transactional
+    public Plot savePlot(PlotListDTO plotListDTO, User user) {
         System.out.println("\n\nRequest to save new Plot :-");
-        printPlotDTO(plotDTO);
+        printPlotListDTO(plotListDTO);
 
         System.out.println("\n\nMapping DTO to Plot...\n\n");
-        // Map PlotDTO to Plot entity
-        Plot plot = mapToPlot(plotDTO);
+        // Map PlotListDTO to Plot entity
+        Plot plot = mapToPlot(plotListDTO);
         System.out.println("\n\nSuccessfully Mapped DTO to Plot.\n\n\n");
 
         plot.setPlotOwner(new PlotOwner(user.getFullName(), user.getUsername(), user.getEmail(), user.getVerified(),
@@ -69,40 +81,62 @@ public class PlotService {
         return plot;
     }
 
-    private Plot mapToPlot(PlotDTO plotDTO) {
+    private PlotDTO mapToDTO(Plot plot) {
+        PlotDTO plotDTO = new PlotDTO();
+        plotDTO.setTitle(plot.getTitle());
+        plotDTO.setDescription(plot.getDescription());
+        plotDTO.setLocation(plot.getLocation());
+        plotDTO.setPlotType(plot.getPlotType());
+        plotDTO.setPrice(plot.getPrice());
+        plotDTO.setDiscount(plot.getDiscount());
+        plotDTO.setLength(plot.getLength());
+        plotDTO.setBreadth(plot.getBreadth());
+        plotDTO.setPlotOwner(plot.getPlotOwner());
+        plotDTO.setRating(plot.getRating());
+        plotDTO.setImageUrls(plot.getImageUrls());
+        plotDTO.setVideoUrls(plot.getVideoUrls());
+        plotDTO.setAmenities(plot.getAmenities());
+        plotDTO.setPriceHistory(plot.getPriceHistory());
+        plotDTO.setIsSold(plot.getIsSold());
+        plotDTO.setTotalViews(plot.getTotalViews());
+        plotDTO.setCreatedAt(plot.getCreatedAt());
+        return plotDTO;
+    }
+
+    private Plot mapToPlot(PlotListDTO plotListDTO) {
         Plot plot = new Plot();
 
-        plot.setTitle(plotDTO.getTitle());
-        plot.setDescription(plotDTO.getDescription());
-        plot.setLength(plotDTO.getLength());
-        plot.setBreadth(plotDTO.getBreadth());
-        plot.setLocation(plotDTO.getLocation());
-        plot.setPrice(plotDTO.getPrice());
-        plot.setPlotType(plotDTO.getPlotType());
-        plot.setDiscount(plotDTO.getDiscount());
-        plot.setAmenities(plotDTO.getAmenities());
-        plot.setImageUrls(plotDTO.getImages());
-        plot.setVideoUrls(plotDTO.getVideos());
-        plot.setTags(plotDTO.getTags());
+        plot.setTitle(plotListDTO.getTitle());
+        plot.setDescription(plotListDTO.getDescription());
+        plot.setLength(plotListDTO.getLength());
+        plot.setBreadth(plotListDTO.getBreadth());
+        plot.setLocation(plotListDTO.getLocation());
+        plot.setPrice(plotListDTO.getPrice());
+        plot.setPlotType(plotListDTO.getPlotType());
+        plot.setDiscount(plotListDTO.getDiscount());
+        plot.setAmenities(plotListDTO.getAmenities());
+        plot.setImageUrls(plotListDTO.getImages());
+        plot.setVideoUrls(plotListDTO.getVideos());
+        plot.setTags(plotListDTO.getTags());
 
         return plot;
     }
 
-    public static void printPlotDTO(PlotDTO plotDTO) {
+    public static void printPlotListDTO(PlotListDTO plotListDTO) {
         System.out.println("====================================");
-        System.out.printf("Title       : %s\n", plotDTO.getTitle());
-        System.out.printf("Description : %s\n", plotDTO.getDescription());
-        System.out.printf("Length      : %.2f\n", plotDTO.getLength());
-        System.out.printf("Breadth     : %.2f\n", plotDTO.getBreadth());
-        System.out.printf("Location    : %s\n", plotDTO.getLocation());
-        System.out.printf("Price       : %.2f\n", plotDTO.getPrice());
-        System.out.printf("Plot Type   : %s\n", plotDTO.getPlotType());
-        System.out.printf("Discount    : %.2f%%\n", plotDTO.getDiscount());
+        System.out.printf("Title       : %s\n", plotListDTO.getTitle());
+        System.out.printf("Description : %s\n", plotListDTO.getDescription());
+        System.out.printf("Length      : %.2f\n", plotListDTO.getLength());
+        System.out.printf("Breadth     : %.2f\n", plotListDTO.getBreadth());
+        System.out.printf("Location    : %s\n", plotListDTO.getLocation());
+        System.out.printf("Price       : %.2f\n", plotListDTO.getPrice());
+        System.out.printf("Plot Type   : %s\n", plotListDTO.getPlotType());
+        System.out.printf("Discount    : %.2f%%\n", plotListDTO.getDiscount());
         // Pretty print lists (Amenities, Image URLs, Video URLs, Tags)
-        printList("Amenities", plotDTO.getAmenities());
-        printList("Image URLs", plotDTO.getImages());
-        printList("Video URLs", plotDTO.getVideos());
-        printList("Tags", plotDTO.getTags());
+        printList("Amenities", plotListDTO.getAmenities());
+        printList("Image URLs", plotListDTO.getImages());
+        printList("Video URLs", plotListDTO.getVideos());
+        printList("Tags", plotListDTO.getTags());
 
         System.out.println("====================================");
     }

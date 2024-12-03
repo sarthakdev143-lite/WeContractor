@@ -220,7 +220,7 @@ const Sell = () => {
                     </section>
                 </div>
 
-                <SubmitButton />
+                <SubmitButton loadind={loading} />
             </form>
             <ToastContainer
                 position="top-right"

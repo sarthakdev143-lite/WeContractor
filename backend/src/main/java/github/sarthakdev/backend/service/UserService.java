@@ -65,6 +65,10 @@ public class UserService {
         Optional<User> user = userRepository.findByUsername(username);
 
         if (user != null) {
+            if (user.get().getPlots() == null) {
+                System.out.println("\n\nUser : " + username + " - Has No Plots.");
+                return null;
+            }
             List<PlotInUserDTO> plotInUserDTO = user.get().getPlots();
             List<Plot> plots = new ArrayList<>();
             for (PlotInUserDTO plotInUser : plotInUserDTO)
@@ -150,7 +154,7 @@ public class UserService {
         // Retrieve user by email or username
         User user = userRepository.findByEmail(request.getIdentifier())
                 .or(() -> userRepository.findByUsername(request.getIdentifier()))
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new RuntimeException("User Does Not Exist."));
 
         // Check if the account is locked
         try {
