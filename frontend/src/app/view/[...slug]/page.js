@@ -4,7 +4,7 @@ import Loading from '@/components/LoadingSpinner';
 import PlotDetails from '@/components/PlotDetails';
 import NotFound from '@/app/not-found';
 
-export default async function PlotPage({ params }: { params: { slug: string[] } }) {
+export default async function PlotPage({ params }) {
     try {
         console.log("Param : " + params.slug)
         // Ensure slug exists and has at least 2 elements
