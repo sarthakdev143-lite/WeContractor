@@ -6,6 +6,7 @@ import NotFound from '@/app/not-found';
 
 export default async function PlotPage({ params }: { params: { slug: string[] } }) {
     try {
+        console.log("Param : " + params.slug)
         // Ensure slug exists and has at least 2 elements
         if (!params.slug || params.slug.length < 2) {
             return <NotFound />;
