@@ -32,6 +32,7 @@
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.10",
     "react-easy-crop": "^5.1.0",
+    "react-hot-toast": "^2.4.1",
     "react-toastify": "^10.0.6",
     "recharts": "^2.13.3",
     "remixicon": "^4.4.0",

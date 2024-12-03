@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, MapPin, Check, Heart, Share2, Ruler, ShieldCheck } from "lucide-react";
+import {
+    Star, MapPin, Check, Heart, Share2, Ruler, ShieldCheck, ArrowLeft, ArrowRight, XIcon, Expand, Clipboard, ClipboardCheck, LandPlot
+} from "lucide-react";
 import { formatIndianCurrency } from "./sell/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import toast, { Toaster } from 'react-hot-toast';
 
 interface PlotData {
     title: string;
@@ -18,10 +22,26 @@ interface PlotData {
     isSold?: boolean;
     rating?: number;
     totalRatings?: number;
+    virtualTourUrl?: string;
 }
+
+const copiedToclipboard = () => toast.success('Link Copied To Clipboard!');
 
 const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
     const [mainImage, setMainImage] = useState(plotData.imageUrls?.[0] || '');
+    const [isFullscreenGallery, setIsFullscreenGallery] = useState(false);
+    const [currentFullscreenIndex, setCurrentFullscreenIndex] = useState(0);
+    const [isLiked, setIsLiked] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleCopyLink = () => {
+        const linkToCopy = window.location.href; // Change this to the desired link
+        navigator.clipboard.writeText(linkToCopy).then(() => {
+            copiedToclipboard();
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000); // Reset state after 2 seconds
+        });
+    };
 
     const calculatePrice = () => {
         const basePrice = plotData.price;
@@ -29,25 +49,101 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
         return basePrice - (basePrice * discount / 100);
     };
 
+    const handleImageFullscreen = (index: number) => {
+        setCurrentFullscreenIndex(index);
+        setIsFullscreenGallery(true);
+    };
+
+    const navigateFullscreenImage = (direction: 'next' | 'prev') => {
+        const images = plotData.imageUrls || [];
+        const newIndex = direction === 'next'
+            ? (currentFullscreenIndex + 1) % images.length
+            : (currentFullscreenIndex - 1 + images.length) % images.length;
+        setCurrentFullscreenIndex(newIndex);
+    };
+
     return (
-        <div className="min-h-screen bg-neutral-50 py-12 px-4 flex items-center justify-center">
-            <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-100 transition-all duration-300 hover:shadow-2xl">
-                {/* Main Content Grid */}
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen bg-gradient-to-br from-neutral-50 to-blue-50 py-12 px-4 flex justify-center"
+        >
+            {/* Fullscreen Gallery Overlay */}
+            <AnimatePresence>
+                {isFullscreenGallery && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+                    >
+                        <div className="relative w-full max-w-6xl h-[80vh]">
+                            <motion.img
+                                key={currentFullscreenIndex}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.3 }}
+                                src={plotData.imageUrls?.[currentFullscreenIndex]}
+                                alt={`Fullscreen ${currentFullscreenIndex + 1}`}
+                                className="w-full h-full object-contain"
+                            />
+                            <button
+                                onClick={() => setIsFullscreenGallery(false)}
+                                className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 p-2 rounded-full transition-colors"
+                            >
+                                <XIcon className="text-white" />
+                            </button>
+                            <button
+                                onClick={() => navigateFullscreenImage('prev')}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 p-3 rounded-full"
+                            >
+                                <ArrowLeft className="text-white" />
+                            </button>
+                            <button
+                                onClick={() => navigateFullscreenImage('next')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 p-3 rounded-full"
+                            >
+                                <ArrowRight className="text-white" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 50 }}
+                className="w-full max-w-[108rem] bg-white rounded-3xl shadow-2xl h-fit overflow-hidden border border-neutral-100 transform transition-all duration-300 hover:shadow-3xl"
+            >
                 <div className="grid md:grid-cols-2 gap-12 p-12">
-                    {/* Image Gallery */}
+                    {/* Enhanced Image Gallery */}
                     <div className="space-y-6">
-                        <div className="relative group overflow-hidden rounded-2xl">
+                        <motion.div
+                            className="relative overflow-hidden rounded-2xl"
+                        >
                             <img
                                 src={mainImage}
                                 alt={plotData.title}
-                                className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
+                                className="w-full aspect-[4/3] object-cover"
                             />
-                        </div>
+                            <button
+                                onClick={() => handleImageFullscreen(
+                                    plotData.imageUrls?.findIndex(img => img === mainImage) || 0
+                                )}
+                                className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/30 p-2 rounded-full backdrop-blur-sm transition-colors"
+                            >
+                                <Expand className="text-white" />
+                            </button>
+                        </motion.div>
 
-                        <div className="flex space-x-3 overflow-x-auto pb-2">
+                        <div className="flex space-x-3 overflow-x-auto p-2">
                             {plotData.imageUrls?.map((img, index) => (
-                                <div 
-                                    key={index} 
+                                <motion.div
+                                    key={index}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                     className="flex-shrink-0 cursor-pointer"
                                     onClick={() => setMainImage(img)}
                                 >
@@ -55,12 +151,12 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                         src={img}
                                         alt={`Thumbnail ${index + 1}`}
                                         className={`w-20 h-20 object-cover rounded-lg transition-all duration-300 
-                                            ${mainImage === img 
-                                                ? 'ring-2 ring-blue-500 scale-105' 
+                                            ${mainImage === img
+                                                ? 'ring-2 ring-blue-500 scale-105'
                                                 : 'opacity-60 hover:opacity-100 hover:scale-105'
                                             }`}
                                     />
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     </div>
@@ -70,22 +166,55 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                         {/* Title and Location */}
                         <div className="flex justify-between items-start">
                             <div>
-                                <h1 className="text-4xl font-bold text-neutral-900 mb-3 tracking-tight">
+                                <motion.h1
+                                    initial={{ opacity: 0, x: -50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="text-4xl font-bold text-neutral-900 mb-3 tracking-tight"
+                                >
                                     {plotData.title}
-                                </h1>
-                                <div className="flex items-center text-neutral-600 text-base">
+                                </motion.h1>
+                                <motion.div
+                                    initial={{ opacity: 0, x: -50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="flex items-center text-neutral-600 text-base"
+                                >
                                     <MapPin className="mr-2 text-blue-500" size={20} />
                                     {plotData.location}
-                                </div>
+                                </motion.div>
                             </div>
 
                             <div className="flex space-x-2">
-                                <button className="p-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors group">
-                                    <Heart className="text-neutral-500 group-hover:text-red-500 transition-colors" />
-                                </button>
-                                <button className="p-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors group">
-                                    <Share2 className="text-neutral-500 group-hover:text-blue-500 transition-colors" />
-                                </button>
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => setIsLiked(!isLiked)}
+                                    className="p-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors group"
+                                >
+                                    <Heart
+                                        className={`transition-colors ${isLiked
+                                            ? 'text-red-500 fill-current'
+                                            : 'text-neutral-500 group-hover:text-red-500'
+                                            }`}
+                                    />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={handleCopyLink}
+                                    className="p-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors group relative"
+                                >
+                                    {isCopied ? (
+                                        <ClipboardCheck className="text-green-500" />
+                                    ) : (
+                                        <>
+                                            <Share2 className="text-neutral-500 transition-opacity group-hover:opacity-0" />
+                                            <Clipboard className="text-neutral-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </>
+                                    )}
+                                </motion.button>
+
                             </div>
                         </div>
 
@@ -95,11 +224,10 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                 {[...Array(5)].map((_, i) => (
                                     <Star
                                         key={i}
-                                        className={`transition-colors duration-300 ${
-                                            i < Math.round(plotData.rating || 0)
-                                                ? 'text-yellow-400 fill-current'
-                                                : 'text-neutral-300'
-                                        }`}
+                                        className={`transition-colors duration-300 ${i < Math.round(plotData.rating || 0)
+                                            ? 'text-yellow-400 fill-current'
+                                            : 'text-neutral-300'
+                                            }`}
                                         size={20}
                                     />
                                 ))}
@@ -130,8 +258,13 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
 
                         {/* Details Grid */}
                         <div className="grid md:grid-cols-2 gap-4">
-                            <div className="bg-neutral-100 p-4 rounded-xl">
-                                <h3 className="text-base font-semibold mb-2 text-neutral-700">Plot Type</h3>
+                            <div className="bg-neutral-100 p-4 rounded-xl flex items-center gap-4">
+                                <h3 className="text-base font-semibold text-neutral-700 flex">
+                                    <LandPlot
+                                        size={18}
+                                        className="mr-2 text-blue-500"
+                                    /> Plot Type
+                                </h3>
                                 <span className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm">
                                     {plotData.plotType}
                                 </span>
@@ -164,11 +297,10 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                         {/* Action Buttons */}
                         <div className="grid grid-cols-2 gap-4">
                             <button
-                                className={`py-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 font-semibold ${
-                                    plotData.isSold 
-                                        ? 'bg-neutral-300 text-neutral-600 cursor-not-allowed' 
-                                        : 'bg-blue-500 text-white hover:bg-blue-600'
-                                }`}
+                                className={`py-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 font-semibold ${plotData.isSold
+                                    ? 'bg-neutral-300 text-neutral-600 cursor-not-allowed'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                                    }`}
                                 disabled={plotData.isSold}
                             >
                                 {plotData.isSold ? 'Sold Out' : 'Book Now'}
@@ -188,15 +320,29 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                     </div>
                 </div>
 
-                {/* Description Section */}
+                {/* Enhanced Description Section with Tab-like Layout */}
                 <div className="bg-neutral-100/50 p-12 border-t border-neutral-200">
-                    <h2 className="text-2xl font-bold mb-4 text-neutral-900">Property Description</h2>
+                    <div className="flex items-center space-x-4 mb-6">
+                        <h2 className="text-2xl font-bold text-neutral-900">Property Overview</h2>
+                        {plotData.virtualTourUrl && (
+                            <a
+                                href={plotData.virtualTourUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition-colors"
+                            >
+                                Virtual Tour
+                            </a>
+                        )}
+                    </div>
                     <p className="text-neutral-700 text-base leading-relaxed">
                         {plotData.description}
                     </p>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+
+            <Toaster />
+        </motion.div>
     );
 };
 
