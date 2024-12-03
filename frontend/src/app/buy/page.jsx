@@ -484,7 +484,7 @@ const Buy = () => {
                                 </Link>
                             ))
                         ) : (
-                            <p className="text-lg text-gray-500">No properties found matching your criteria.</p>
+                            <p className="text-lg text-gray-500 text-center">No properties found matching your criteria.</p>
                         )}
                     </div>
                     <p className='mt-16 text-center text-gray-500'>You have reached the end.</p>

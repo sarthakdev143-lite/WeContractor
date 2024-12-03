@@ -103,7 +103,7 @@ public class PlotController {
             if (plot == null) {
                 return ResponseEntity.notFound().build();
             }
-            System.out.println("\nPlot Title With ID : " + plot.getTitle() + "\n\n");
+            System.out.println("\nReturning Plot With Title : " + plot.getTitle() + "\n\n");
             return ResponseEntity.ok(plot);
         } catch (Exception e) {
             e.printStackTrace();

@@ -6,8 +6,12 @@ import NotFound from '@/app/not-found';
 
 export default async function PlotPage({ params }: { params: { slug: string[] } }) {
     try {
-        const { slug } = params;
-        const response = await MYAXIOS.get(`/api/plots/${slug[1]}`);
+        // Ensure slug exists and has at least 2 elements
+        if (!params.slug || params.slug.length < 2) {
+            return <NotFound />;
+        }
+
+        const response = await MYAXIOS.get(`/api/plots/${params.slug[1]}`);
         const plotData = response.data;
 
         return (
@@ -16,6 +20,7 @@ export default async function PlotPage({ params }: { params: { slug: string[] } 
             </Suspense>
         );
     } catch (error) {
+        console.error("Error fetching plot data:", error);
         return <NotFound />;
     }
 }
