@@ -115,7 +115,7 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 50 }}
-                className="w-full max-w-[108rem] bg-white rounded-3xl shadow-2xl h-fit overflow-hidden border border-neutral-100 transform transition-all duration-300 hover:shadow-3xl"
+                className="w-full max-w-[128rem] bg-white rounded-3xl shadow-2xl h-fit overflow-hidden border border-neutral-100 transform transition-all duration-300 hover:shadow-3xl"
             >
                 <div className="grid md:grid-cols-2 gap-12 p-12">
                     {/* Enhanced Image Gallery */}

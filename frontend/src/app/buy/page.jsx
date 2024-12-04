@@ -209,6 +209,22 @@ const Buy = () => {
         return totalViews;
     };
 
+    const getPriceAfterDiscount = (price, discount) => {
+        // Filter non-numeric characters 
+        const filteredPrice = price ? price.toString().replace(/[^0-9.]/g, "") : "0";
+        const filteredDiscount = discount ? discount.toString().replace(/[^0-9.]/g, "") : "0";
+
+        // Parse the filtered values into numbers
+        const validPrice = parseFloat(filteredPrice) || 0;
+        const validDiscount = parseFloat(filteredDiscount) || 0;
+
+        if (validPrice === 0) return 0;
+        const priceAfterDiscount = (validPrice - ((validDiscount * validPrice) / 100));
+
+        console.log(priceAfterDiscount, discount);
+        return priceAfterDiscount;
+    };
+
     return (
         <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
             {isLoading ? (
@@ -391,7 +407,7 @@ const Buy = () => {
                                 >
                                     <div className="relative hover:-translate-y-1 transition-all duration-200 bg-white rounded-2xl shadow-lg overflow-hidden 
                                 border border-gray-100 hover:border-blue-100 
-                                hover:shadow-2xl">
+                                hover:shadow-2xl cursor-pointer">
 
                                         {/* Image Section with Overlays */}
                                         <div className="h-48 sm:h-64 md:h-72 relative overflow-hidden">
@@ -444,8 +460,8 @@ const Buy = () => {
                                             </div>
 
                                             {/* Details Grid */}
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="bg-blue-50 p-2 rounded-lg flex items-center space-x-2">
+                                            <div className="flex gap-2">
+                                                <div className="bg-blue-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[1.9]">
                                                     <span className="bg-blue-100 p-1.5 rounded-full">
                                                         <Ruler className="w-4 h-4 text-blue-600" />
                                                     </span>
@@ -454,14 +470,16 @@ const Buy = () => {
                                                         <p className="text-sm font-semibold">{property.length}ft x {property.breadth}ft</p>
                                                     </div>
                                                 </div>
-                                                <div className="bg-green-50 p-2 rounded-lg flex items-center space-x-2">
+                                                <div className="bg-green-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[2]">
                                                     <span className="bg-green-100 p-1.5 rounded-full">
                                                         <Star className="w-4 h-4 text-green-600" />
                                                     </span>
                                                     <div>
                                                         <p className="text-xs text-gray-500">Price</p>
-                                                        <p className="text-sm font-semibold text-green-700">
-                                                            ₹{formatIndianPrice(property.price)}
+                                                        <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                                                            <span className="line-through text-gray-400">₹{formatIndianPrice(property.price)}</span>
+                                                            <span>₹{formatIndianPrice(getPriceAfterDiscount(property.price, property.discount))}</span>
+                                                            <span className="text-xs text-red-600 font-medium">({property.discount}% OFF)</span>
                                                         </p>
                                                     </div>
                                                 </div>

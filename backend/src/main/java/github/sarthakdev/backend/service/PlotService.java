@@ -31,9 +31,11 @@ public class PlotService {
     }
 
     @Transactional
-    public PlotDTO getPlotById(ObjectId id) {
+    public PlotDTO getPlotById(ObjectId id, Boolean noViewIncrement) {
         Optional<Plot> plot = plotRepository.findById(id);
-        PlotDTO plotDTO = mapToDTO(plot.get());
+        if (noViewIncrement == null || !noViewIncrement)
+            plot.get().setTotalViews(plot.get().getTotalViews() + 1);
+        PlotDTO plotDTO = mapToDTO(plotRepository.save(plot.get()));
         System.out.println("\n\nReturning PlotDTO :-\n" + plotDTO);
         return plotDTO;
     }

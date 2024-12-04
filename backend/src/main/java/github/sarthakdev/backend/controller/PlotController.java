@@ -55,6 +55,7 @@ public class PlotController {
                                 .dateAdded(plot.getCreatedAt().toString())
                                 .tags(plot.getTags() != null ? String.join(", ", plot.getTags()) : "")
                                 .plotType(plot.getPlotType())
+                                .discount(plot.getDiscount())
                                 .totalViews(plot.getTotalViews())
                                 .build();
                     })
@@ -96,10 +97,10 @@ public class PlotController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPlot(@PathVariable ObjectId id) {
+    public ResponseEntity<?> getPlot(@PathVariable ObjectId id, @RequestParam(required = false) Boolean noViewIncrement) {
         try {
             System.out.println("\n\nFetching Plot For ID : " + id);
-            PlotDTO plot = plotService.getPlotById(id);
+            PlotDTO plot = plotService.getPlotById(id, noViewIncrement);
             if (plot == null) {
                 return ResponseEntity.notFound().build();
             }
