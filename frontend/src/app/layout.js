@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50`}
       >
         <Navbar />
-        <main className='px-4 pb-8 mt-4'>{children}</main>
+        <main className='md:px-4 px-2 pb-8 mt-4'>{children}</main>
       </body>
     </html>
   );

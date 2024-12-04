@@ -221,12 +221,11 @@ const Buy = () => {
         if (validPrice === 0) return 0;
         const priceAfterDiscount = (validPrice - ((validDiscount * validPrice) / 100));
 
-        console.log(priceAfterDiscount, discount);
         return priceAfterDiscount;
     };
 
     return (
-        <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 p-4 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
+        <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 sm:p-4 p-2 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
             {isLoading ? (
                 <div className="flex flex-col justify-center items-center">
                     <LoadingSpinner type='circle' text='.' />
@@ -403,7 +402,7 @@ const Buy = () => {
                                     href={`/view/${property.title}/${property.id}`}
                                     target='_blank'
                                     key={index}
-                                    className="w-full sm:w-[45%] md:w-[30%] h-fit group perspective-1000"
+                                    className="w-full sm:w-[45%] lg:w-[30%] h-fit group"
                                 >
                                     <div className="relative hover:-translate-y-1 transition-all duration-200 bg-white rounded-2xl shadow-lg overflow-hidden 
                                 border border-gray-100 hover:border-blue-100 
@@ -460,7 +459,7 @@ const Buy = () => {
                                             </div>
 
                                             {/* Details Grid */}
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 flex-wrap">
                                                 <div className="bg-blue-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[1.9]">
                                                     <span className="bg-blue-100 p-1.5 rounded-full">
                                                         <Ruler className="w-4 h-4 text-blue-600" />
