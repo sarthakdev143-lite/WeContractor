@@ -15,6 +15,7 @@ export const useAuth = () => {
             const isValid = await AuthUtils.validateToken();
             setIsLoggedIn(isValid);
         } catch (error) {
+            console.error("Error checking auth status :- "+error);
             setIsLoggedIn(false);
         } finally {
             setIsLoading(false);

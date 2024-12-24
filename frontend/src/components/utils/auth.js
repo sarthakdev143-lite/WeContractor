@@ -108,6 +108,7 @@ export const AuthUtils = {
             const decoded = this.decodeToken(token);
             return decoded.exp * 1000 > Date.now();
         } catch (error) {
+            console.error('Token decoding failed :- ', error);
             return false;
         }
     },
