@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Star, MapPin, Check, Heart, Share2, Ruler, ShieldCheck, ArrowLeft, ArrowRight, XIcon, Expand, Clipboard, ClipboardCheck, LandPlot
 } from "lucide-react";
 import { formatIndianCurrency } from "./sell/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from 'react-hot-toast';
+import { AuthUtils } from "./utils/auth";
 
 interface PlotData {
     title: string;
@@ -33,7 +34,8 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
     const [currentFullscreenIndex, setCurrentFullscreenIndex] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
-
+    const [plotId, setPlotId] = useState<string | null>(null);
+    
     const handleCopyLink = () => {
         const linkToCopy = window.location.href; // Change this to the desired link
         navigator.clipboard.writeText(linkToCopy).then(() => {
@@ -60,6 +62,80 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
             ? (currentFullscreenIndex + 1) % images.length
             : (currentFullscreenIndex - 1 + images.length) % images.length;
         setCurrentFullscreenIndex(newIndex);
+    };
+
+    useEffect(() => {
+        // Extract ID from the URL client-side
+        const pathParts = window.location.pathname.split('/');
+        const id = pathParts[pathParts.length - 1];
+        setPlotId(id);
+
+        // Check if plot is in favorites when component mounts
+        const checkFavoriteStatus = async () => {
+            try {
+                if (!AuthUtils.isAuthenticated()) return;
+
+                const AuthenticatedAxios = AuthUtils.createAuthenticatedAxios();
+                const response = await AuthenticatedAxios.get(`/api/favorites/check/${id}`);
+                setIsLiked(response.data);
+            } catch (error) {
+                console.error('Error checking favorite status:', error);
+            }
+        };
+
+        checkFavoriteStatus();
+    }, []);
+
+    const addToFavorite = async () => {
+        try {
+            if (!AuthUtils.isAuthenticated()) {
+                toast.error('Log in to save plots to Favorites.', {
+                    duration: 3000,
+                    position: 'top-center',
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                        padding: '12px',
+                        borderRadius: '8px'
+                    },
+                    icon: '🔒',
+                });
+                return;
+            }
+
+            if (!plotId) {
+                toast.error('Plot ID is missing', {
+                    duration: 2000,
+                    position: 'top-center'
+                });
+                return;
+            }
+
+            const AuthenticatedAxios = AuthUtils.createAuthenticatedAxios();
+
+            // Use proper HTTP methods for adding/removing favorites
+            if (isLiked) {
+                await AuthenticatedAxios.delete(`/api/favorites/remove/${plotId}`);
+            } else {
+                await AuthenticatedAxios.post(`/api/favorites/add/${plotId}`);
+            }
+
+            // Toggle liked state after successful API call
+            setIsLiked(!isLiked);
+
+            // Show success message
+            toast.success(isLiked ? 'Removed from favorites' : 'Added to favorites', {
+                duration: 2000,
+                position: 'top-center'
+            });
+
+        } catch (error) {
+            console.error('Error updating favorites:', error);
+            toast.error('Failed to update favorites', {
+                duration: 2000,
+                position: 'top-center'
+            });
+        }
     };
 
     return (
@@ -189,7 +265,7 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                 <motion.button
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
-                                    onClick={() => setIsLiked(!isLiked)}
+                                    onClick={() => addToFavorite()}
                                     className="p-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors group"
                                 >
                                     <Heart
@@ -276,7 +352,10 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                     <span className="font-semibold text-neutral-700 text-base">Dimensions</span>
                                 </div>
                                 <p className="text-neutral-800 font-medium">
-                                    {plotData.length} x {plotData.breadth} meters
+                                    {plotData.length ?? 'N/A'} ft.  x {plotData.breadth ?? 'N/A'} ft. = <span className="font-semibold">
+                                        {/* {} */}
+                                        {formatIndianCurrency(plotData.length && plotData.breadth ? plotData.length * plotData.breadth : 0)}
+                                    </span> sq ft.
                                 </p>
                             </div>
                         </div>

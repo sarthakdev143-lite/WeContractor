@@ -11,7 +11,7 @@ public class CorsProperties {
     private String allowedOrigins;
 
     @Bean
-    public String getAllowedOrigins() {
+    String getAllowedOrigins() {
         System.out.println("\n\nAllowed Origins : " + allowedOrigins + "\n\n");
         return allowedOrigins;
     }

@@ -54,7 +54,7 @@ public class User {
     private List<Role> roles;
 
     @DBRef
-    private List<Favourite> favourites;
+    private List<Favorite> favourites;
 
     private List<Transaction> transactions;
 

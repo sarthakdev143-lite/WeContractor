@@ -40,7 +40,7 @@ export default function PlotPage({ params }) {
 
                 setIsLoading(false);
             } catch (error) {
-                console.error("Error fetching plot data:", error);
+                console.error("Error fetching plot data : ", error);
                 setIsLoading(false);
             }
         }

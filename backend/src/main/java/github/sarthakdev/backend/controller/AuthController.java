@@ -1,13 +1,21 @@
 package github.sarthakdev.backend.controller;
 
+import java.util.HashMap;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import github.sarthakdev.backend.dto.SignupResponse;
+import github.sarthakdev.backend.dto.TokenRefreshRequest;
+import github.sarthakdev.backend.dto.TokenRefreshResponse;
+import github.sarthakdev.backend.exception.TokenRefreshException;
 import github.sarthakdev.backend.exception.UserAlreadyExistsException;
+import github.sarthakdev.backend.model.RefreshToken;
+import github.sarthakdev.backend.repository.RefreshTokenRepository;
 import github.sarthakdev.backend.security.JwtService;
 import github.sarthakdev.backend.service.CustomUserDetailsService;
+import github.sarthakdev.backend.service.RefreshTokenService;
 import github.sarthakdev.backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -27,9 +35,11 @@ public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @GetMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         try {
             String result = userService.verifyEmail(token);
             return ResponseEntity.ok(new ApiResponse(true, result));
@@ -84,7 +94,7 @@ public class AuthController {
 
     @GetMapping("/verify-login")
     public ResponseEntity<?> verifyLogin(
-            @RequestParam("token") String token,
+            @RequestParam String token,
             HttpServletRequest servletRequest) {
         System.out.println("\n\nVerifying Login\n\n");
         try {
@@ -93,12 +103,12 @@ public class AuthController {
             System.out.println(
                     "\n\nToken : " + token + "\nIp-Address : " + ipAddress + "\nUser Agent : " + userAgent + "\n\n");
 
-            String jwtToken = userService.verifyLoginToken(token, ipAddress, userAgent);
-            return ResponseEntity.ok(new LoginResponse("Login successful", true, jwtToken));
+            LoginResponse loginResponse = userService.verifyLoginToken(token, ipAddress, userAgent);
+            return ResponseEntity.ok(loginResponse);
         } catch (Exception e) {
             System.out.println("\n\nError :-\n " + e.getMessage() + "\n\n");
             return ResponseEntity.badRequest()
-                    .body(new LoginResponse(e.getMessage(), false, null));
+                    .body(new LoginResponse(e.getMessage(), false, null, null));
         }
     }
 
@@ -155,4 +165,25 @@ public class AuthController {
                     .body(new ApiResponse(false, "Token validation failed", e.getMessage()));
         }
     }
+
+    // Add new endpoint in AuthController
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+        try {
+            return refreshTokenRepository.findByToken(request.getRefreshToken())
+                    .map(refreshTokenService::verifyExpiration)
+                    .map(RefreshToken::getUsername)
+                    .map(username -> {
+                        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+                        String token = jwtService.generateToken(new HashMap<>(), userDetails);
+                        return ResponseEntity.ok(new TokenRefreshResponse(token, request.getRefreshToken()));
+                    })
+                    .orElseThrow(() -> new TokenRefreshException(request.getRefreshToken(),
+                            "Refresh token is not in database!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+    
 }

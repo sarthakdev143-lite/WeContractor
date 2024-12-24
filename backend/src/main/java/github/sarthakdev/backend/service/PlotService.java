@@ -83,8 +83,10 @@ public class PlotService {
         return plot;
     }
 
+
     private PlotDTO mapToDTO(Plot plot) {
         PlotDTO plotDTO = new PlotDTO();
+
         plotDTO.setTitle(plot.getTitle());
         plotDTO.setDescription(plot.getDescription());
         plotDTO.setLocation(plot.getLocation());
@@ -107,7 +109,6 @@ public class PlotService {
 
     private Plot mapToPlot(PlotListDTO plotListDTO) {
         Plot plot = new Plot();
-
         plot.setTitle(plotListDTO.getTitle());
         plot.setDescription(plotListDTO.getDescription());
         plot.setLength(plotListDTO.getLength());

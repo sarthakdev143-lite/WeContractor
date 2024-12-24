@@ -29,7 +29,7 @@ const VerifyLoginContent = () => {
                 const response = await MYAXIOS.get(`/api/auth/verify-login?token=${token}`);
 
                 if (response.data.success) {
-                    AuthUtils.setToken(response.data.token);
+                    AuthUtils.setTokens(response.data.token, response.data.refreshToken);
                     setVerificationStatus('success');
                     notify.success('Login successful!');
 

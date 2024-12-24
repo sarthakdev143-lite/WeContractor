@@ -22,8 +22,13 @@ public class LoginAttemptService {
     public void checkLoginAttempts(User user) throws AccountLockedException {
         if (user.getLoginAttempts() >= MAX_ATTEMPTS &&
                 user.getLastLoginAttemptTime().plusMinutes(LOCK_TIME_MINUTES).isAfter(LocalDateTime.now())) {
-            System.out.println("\n\nAccount temporarily locked due to too many failed attempts. " +
-                    "Please try again later or reset your password.\n\n");
+            System.out.println("""
+                    
+                    
+                    Account temporarily locked due to too many failed attempts. \
+                    Please try again later or reset your password.
+                    
+                    """);
             throw new AccountLockedException("Account temporarily locked due to too many failed attempts. " +
                     "Please try again later or reset your password.");
         }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import github.sarthakdev.backend.dto.LoginResponse;
 import github.sarthakdev.backend.dto.PlotInUserDTO;
 import github.sarthakdev.backend.dto.SecureLoginRequest;
 import github.sarthakdev.backend.dto.SignupRequest;
@@ -28,6 +29,7 @@ import github.sarthakdev.backend.exception.UserAlreadyExistsException;
 import github.sarthakdev.backend.exception.UsernameNotFoundException;
 import github.sarthakdev.backend.model.LoginVerificationToken;
 import github.sarthakdev.backend.model.Plot;
+import github.sarthakdev.backend.model.RefreshToken;
 import github.sarthakdev.backend.model.Role;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.model.VerificationToken;
@@ -56,6 +58,7 @@ public class UserService {
     private final JwtService jwtService;
     private final LoginVerificationTokenRepository loginVerificationTokenRepository;
     private final LoginAttemptService loginAttemptService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${FRONTEND_URL:http://localhost:3000}")
     private String frontendUrl;
@@ -211,7 +214,7 @@ public class UserService {
     }
 
     @Transactional
-    public String verifyLoginToken(String token, String ipAddress, String userAgent) {
+    public LoginResponse verifyLoginToken(String token, String ipAddress, String userAgent) {
         LoginVerificationToken loginToken = loginVerificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid login token"));
 
@@ -250,6 +253,8 @@ public class UserService {
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
         String jwtToken = jwtService.generateToken(extraClaims, userDetails);
 
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+
         System.out.println("\n\nSending Login Notification...");
         // Send login notification
         try {
@@ -261,7 +266,7 @@ public class UserService {
             throw new RuntimeException("\n\nFailed to send login notification", e);
         }
 
-        return jwtToken;
+        return new LoginResponse("Login successful", true, jwtToken, refreshToken.getToken());
     }
 
     public static String printUserDetails(User user) {
