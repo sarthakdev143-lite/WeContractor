@@ -141,7 +141,7 @@ const Navbar = () => {
                             <>
                                 <Link
                                     href="/user-dashboard"
-                                    className="block text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
+                                    className="text-white text-center bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
                                     onClick={toggleMenu}
                                 >
                                     Dashboard
