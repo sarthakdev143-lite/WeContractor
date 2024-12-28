@@ -74,39 +74,17 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/initiate-login")
-    public ResponseEntity<?> initiateLogin(
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
             @Valid @RequestBody SecureLoginRequest request,
             HttpServletRequest servletRequest) {
-        System.out.println("\n\nInitiating Login\n\n");
         try {
             String ipAddress = getClientIp(servletRequest);
             String userAgent = servletRequest.getHeader("User-Agent");
-            System.out.println("\n\nIp-Address : " + ipAddress + "\nUser Agent : " + userAgent + "\n\n");
 
-            String result = userService.initiateLogin(request, ipAddress, userAgent);
-            return ResponseEntity.ok(new ApiResponse(true, result));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, e.getMessage()));
-        }
-    }
-
-    @GetMapping("/verify-login")
-    public ResponseEntity<?> verifyLogin(
-            @RequestParam String token,
-            HttpServletRequest servletRequest) {
-        System.out.println("\n\nVerifying Login\n\n");
-        try {
-            String ipAddress = getClientIp(servletRequest);
-            String userAgent = servletRequest.getHeader("User-Agent");
-            System.out.println(
-                    "\n\nToken : " + token + "\nIp-Address : " + ipAddress + "\nUser Agent : " + userAgent + "\n\n");
-
-            LoginResponse loginResponse = userService.verifyLoginToken(token, ipAddress, userAgent);
+            LoginResponse loginResponse = userService.directLogin(request, ipAddress, userAgent);
             return ResponseEntity.ok(loginResponse);
         } catch (Exception e) {
-            System.out.println("\n\nError :-\n " + e.getMessage() + "\n\n");
             return ResponseEntity.badRequest()
                     .body(new LoginResponse(e.getMessage(), false, null, null));
         }
@@ -185,5 +163,67 @@ public class AuthController {
                     .body(new ApiResponse(false, e.getMessage()));
         }
     }
-    
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // Extract token from Authorization header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401)
+                        .body(new ApiResponse(false, "Invalid authorization header"));
+            }
+
+            String token = authHeader.substring(7); // Remove "Bearer " prefix
+            String username = jwtService.extractUserName(token);
+
+            // Delete refresh token from database
+            refreshTokenRepository.deleteByUsername(username);
+
+            return ResponseEntity.ok(new ApiResponse(true, "Logged out successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "Logout failed: " + e.getMessage()));
+        }
+    }
 }
+
+// @PostMapping("/initiate-login")
+// public ResponseEntity<?> initiateLogin(
+// @Valid @RequestBody SecureLoginRequest request,
+// HttpServletRequest servletRequest) {
+// System.out.println("\n\nInitiating Login\n\n");
+// try {
+// String ipAddress = getClientIp(servletRequest);
+// String userAgent = servletRequest.getHeader("User-Agent");
+// System.out.println("\n\nIp-Address : " + ipAddress + "\nUser Agent : " +
+// userAgent + "\n\n");
+
+// String result = userService.initiateLogin(request, ipAddress, userAgent);
+// return ResponseEntity.ok(new ApiResponse(true, result));
+// } catch (Exception e) {
+// return ResponseEntity.badRequest()
+// .body(new ApiResponse(false, e.getMessage()));
+// }
+// }
+
+// @GetMapping("/verify-login")
+// public ResponseEntity<?> verifyLogin(
+// @RequestParam String token,
+// HttpServletRequest servletRequest) {
+// System.out.println("\n\nVerifying Login\n\n");
+// try {
+// String ipAddress = getClientIp(servletRequest);
+// String userAgent = servletRequest.getHeader("User-Agent");
+// System.out.println(
+// "\n\nToken : " + token + "\nIp-Address : " + ipAddress + "\nUser Agent : " +
+// userAgent + "\n\n");
+
+// LoginResponse loginResponse = userService.verifyLoginToken(token, ipAddress,
+// userAgent);
+// return ResponseEntity.ok(loginResponse);
+// } catch (Exception e) {
+// System.out.println("\n\nError :-\n " + e.getMessage() + "\n\n");
+// return ResponseEntity.badRequest()
+// .body(new LoginResponse(e.getMessage(), false, null, null));
+// }
+// }

@@ -8,6 +8,7 @@ import { formatIndianCurrency } from "./sell/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from 'react-hot-toast';
 import { AuthUtils } from "./utils/auth";
+import Image from "next/image";
 
 interface PlotData {
     title: string;
@@ -197,10 +198,11 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                     {/* Image Gallery Section */}
                     <div className="space-y-4 sm:space-y-6">
                         <motion.div className="relative overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl">
-                            <img
+                            <Image
                                 src={mainImage}
                                 alt={plotData.title}
                                 className="w-full aspect-[4/3] object-cover"
+                                layout="fill"
                             />
                             <button
                                 onClick={() => handleImageFullscreen(
@@ -221,7 +223,7 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                     className="flex-shrink-0 cursor-pointer"
                                     onClick={() => setMainImage(img)}
                                 >
-                                    <img
+                                    <Image
                                         src={img}
                                         alt={`Thumbnail ${index + 1}`}
                                         className={`w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md sm:rounded-lg transition-all duration-300 
@@ -229,6 +231,8 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                                 ? 'ring-2 ring-blue-500 scale-105'
                                                 : 'opacity-60 hover:opacity-100 hover:scale-105'
                                             }`}
+                                        width={100}
+                                        height={100}
                                     />
                                 </motion.div>
                             ))}

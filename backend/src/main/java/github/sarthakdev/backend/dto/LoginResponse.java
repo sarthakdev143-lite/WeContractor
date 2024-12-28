@@ -14,6 +14,6 @@ import lombok.ToString;
 public class LoginResponse {
     private String message;
     private boolean success;
-    private String token;
+    private String authToken;
     private String refreshToken;
 }

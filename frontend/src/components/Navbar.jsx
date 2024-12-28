@@ -1,39 +1,38 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Menu, X } from 'lucide-react';
-import { useAuth } from './hooks/useAuth';
-import logo from '../assets/logo.png';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
+import { useAuth } from "./hooks/useAuth";
+import logo from "../assets/logo.png";
 
 const Navbar = () => {
     const { isLoggedIn, isLoading, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    const linkStyles = "text-blue-600 font-medium hover:text-blue-800";
-    const loginButtonStyles = "text-white bg-blue-600 px-6 py-3 rounded hover:bg-blue-700 w-full md:w-auto text-center";
+    const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
-    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-    // Close modal when escape key is pressed
     useEffect(() => {
         const handleEscape = (e) => {
-            if (e.key === 'Escape')
-                setShowLogoutModal(false);
+            if (e.key === "Escape") setShowLogoutModal(false);
         };
 
-        if (showLogoutModal)
-            document.addEventListener('keydown', handleEscape);
+        if (showLogoutModal) {
+            document.addEventListener("keydown", handleEscape);
+        }
 
         return () => {
-            document.removeEventListener('keydown', handleEscape);
+            document.removeEventListener("keydown", handleEscape);
         };
     }, [showLogoutModal]);
 
     const LogoutModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowLogoutModal(false)}>
+        <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowLogoutModal(false)}
+        >
             <div
                 className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 relative"
                 onClick={(e) => e.stopPropagation()}
@@ -67,7 +66,7 @@ const Navbar = () => {
     const LogoutButton = ({ className = "" }) => (
         <button
             onClick={() => setShowLogoutModal(true)}
-            className={`m-0 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors ${className}`}
+            className={`px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors ${className}`}
         >
             Logout
         </button>
@@ -88,7 +87,7 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className="w-full bg-slate-50">
+            <nav className="w-full bg-slate-50 shadow-sm">
                 <div className="flex justify-between items-center py-4 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
                     <Link href="/" className="flex items-center">
                         <Image
@@ -111,17 +110,23 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center gap-4 lg:gap-6">
                         {isLoggedIn ? (
                             <>
-                                <Link href="/user-dashboard" className="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg">
+                                <Link
+                                    href="/user-dashboard"
+                                    className="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
+                                >
                                     Dashboard
                                 </Link>
                                 <LogoutButton />
                             </>
                         ) : (
                             <>
-                                <Link href="/form/signup" className={linkStyles}>
+                                <Link href="/form/signup" className="text-blue-600 font-medium hover:text-blue-800">
                                     Signup
                                 </Link>
-                                <Link href="/form/login" className={loginButtonStyles}>
+                                <Link
+                                    href="/form/login"
+                                    className="text-white bg-blue-600 px-6 py-3 rounded hover:bg-blue-700 w-full md:w-auto text-center"
+                                >
                                     Login
                                 </Link>
                             </>
@@ -130,13 +135,13 @@ const Navbar = () => {
                 </div>
 
                 {/* Mobile Navigation Menu */}
-                <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-                    <div className="px-4 py-3 flex items-center gap-3 bg-gray-50 border-t">
+                {isMenuOpen && (
+                    <div className="md:hidden px-4 py-3 flex flex-col gap-3 bg-gray-50 border-t">
                         {isLoggedIn ? (
                             <>
                                 <Link
                                     href="/user-dashboard"
-                                    className="block w-full text-center text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
+                                    className="block text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
                                     onClick={toggleMenu}
                                 >
                                     Dashboard
@@ -147,14 +152,14 @@ const Navbar = () => {
                             <>
                                 <Link
                                     href="/form/signup"
-                                    className="block w-full text-center text-blue-600 hover:text-blue-800 py-2"
+                                    className="block text-blue-600 hover:text-blue-800 py-2"
                                     onClick={toggleMenu}
                                 >
                                     Signup
                                 </Link>
                                 <Link
                                     href="/form/login"
-                                    className={`block ${loginButtonStyles}`}
+                                    className="block text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700"
                                     onClick={toggleMenu}
                                 >
                                     Login
@@ -162,7 +167,7 @@ const Navbar = () => {
                             </>
                         )}
                     </div>
-                </div>
+                )}
             </nav>
 
             {/* Logout Confirmation Modal */}

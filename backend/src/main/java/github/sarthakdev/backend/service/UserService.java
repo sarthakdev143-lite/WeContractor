@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.security.auth.login.AccountLockedException;
 
@@ -27,13 +26,11 @@ import github.sarthakdev.backend.dto.UserDashboardResponse;
 import github.sarthakdev.backend.dto.UserDashboardTransactionDTO;
 import github.sarthakdev.backend.exception.UserAlreadyExistsException;
 import github.sarthakdev.backend.exception.UsernameNotFoundException;
-import github.sarthakdev.backend.model.LoginVerificationToken;
 import github.sarthakdev.backend.model.Plot;
 import github.sarthakdev.backend.model.RefreshToken;
 import github.sarthakdev.backend.model.Role;
 import github.sarthakdev.backend.model.User;
 import github.sarthakdev.backend.model.VerificationToken;
-import github.sarthakdev.backend.repository.LoginVerificationTokenRepository;
 import github.sarthakdev.backend.repository.PlotRepository;
 import github.sarthakdev.backend.repository.RoleRepository;
 import github.sarthakdev.backend.repository.UserRepository;
@@ -56,7 +53,6 @@ public class UserService {
     private final EmailService emailService;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtService jwtService;
-    private final LoginVerificationTokenRepository loginVerificationTokenRepository;
     private final LoginAttemptService loginAttemptService;
     private final RefreshTokenService refreshTokenService;
 
@@ -151,20 +147,152 @@ public class UserService {
         return "Email verified successfully";
     }
 
-    public String initiateLogin(SecureLoginRequest request, String ipAddress, String userAgent) {
-        System.out.println("\n\nInitiating Login for: " + request + "\n\n");
+    // public String initiateLogin(SecureLoginRequest request, String ipAddress,
+    // String userAgent) {
+    // System.out.println("\n\nInitiating Login for: " + request + "\n\n");
 
-        // Retrieve user by email or username
-        User user = userRepository.findByEmail(request.getIdentifier())
-                .or(() -> userRepository.findByUsername(request.getIdentifier()))
-                .orElseThrow(() -> new RuntimeException("User Does Not Exist."));
+    // // Retrieve user by email or username
+    // User user = userRepository.findByEmail(request.getIdentifier())
+    // .or(() -> userRepository.findByUsername(request.getIdentifier()))
+    // .orElseThrow(() -> new RuntimeException("User Does Not Exist."));
+
+    // // Check if the account is locked
+    // try {
+    // loginAttemptService.checkLoginAttempts(user);
+    // } catch (AccountLockedException e) {
+    // e.printStackTrace();
+    // } // Throws AccountLockedException if locked
+
+    // // Ensure the account is enabled
+    // if (!user.getEnabled()) {
+    // throw new RuntimeException("Account not verified");
+    // }
+
+    // // Verify the password
+    // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+    // try {
+    // loginAttemptService.recordFailedAttempt(user);
+    // } catch (MessagingException e) {
+    // e.printStackTrace();
+    // }
+    // userRepository.save(user);
+    // throw new RuntimeException("Invalid credentials");
+    // }
+
+    // // Generate a unique login token
+    // String token = UUID.randomUUID().toString();
+    // String passwordHash = passwordEncoder.encode(request.getPassword());
+
+    // // Create a new LoginVerificationToken
+    // LoginVerificationToken loginToken = new LoginVerificationToken(
+    // token, user.getEmail(), passwordHash, ipAddress, userAgent); // Use user's
+    // email here
+
+    // // Remove any existing unconfirmed tokens for this user
+    // loginVerificationTokenRepository.findByEmail(user.getEmail())
+    // .ifPresent(loginVerificationTokenRepository::delete);
+
+    // // Save the new token
+    // loginVerificationTokenRepository.save(loginToken);
+
+    // // Generate the login link
+    // String loginLink = frontendUrl + "/form/login/verify-login?token=" + token;
+    // System.out.println("\n\nLogin Link : " + loginLink + "\n\n");
+
+    // System.out.println("\n\nSending Login Link...");
+    // // Send the login link to the user's email
+    // try {
+    // emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to
+    // user's email
+    // System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who
+    // Initiated login :-\n"
+    // + printUserDetails(user) + "\n\n");
+    // return "Login verification link sent to your email";
+    // } catch (MessagingException e) {
+    // throw new RuntimeException("Failed to send login verification email", e);
+    // }
+    // }
+
+    // @Transactional
+    // public LoginResponse verifyLoginToken(String token, String ipAddress, String
+    // userAgent) {
+    // LoginVerificationToken loginToken =
+    // loginVerificationTokenRepository.findByToken(token)
+    // .orElseThrow(() -> new IllegalArgumentException("Invalid login token"));
+
+    // // Validate token
+    // if (loginToken.getConfirmedAt() != null) {
+    // throw new IllegalStateException("Token already used");
+    // }
+
+    // if (loginToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+    // throw new IllegalStateException("Token expired");
+    // }
+
+    // // Verify IP and User Agent for additional security
+    // if (!loginToken.getIpAddress().equals(ipAddress) ||
+    // !loginToken.getUserAgent().equals(userAgent)) {
+    // loginToken.setAttempts(loginToken.getAttempts() + 1);
+    // loginVerificationTokenRepository.save(loginToken);
+    // throw new SecurityException("Security verification failed");
+    // }
+
+    // // Mark token as confirmed
+    // loginToken.setConfirmedAt(LocalDateTime.now());
+    // loginVerificationTokenRepository.save(loginToken);
+
+    // // Get user and reset login attempts
+    // User user = userRepository.findByEmail(loginToken.getEmail())
+    // .orElseThrow(() -> new RuntimeException("User not found"));
+    // loginAttemptService.resetAttempts(user);
+    // userRepository.save(user);
+
+    // // Generate JWT token with additional claims
+    // Map<String, Object> extraClaims = new HashMap<>();
+    // extraClaims.put("ip", ipAddress);
+    // extraClaims.put("loginTime", LocalDateTime.now().toString());
+
+    // UserDetails userDetails =
+    // customUserDetailsService.loadUserByUsername(user.getUsername());
+    // String jwtToken = jwtService.generateToken(extraClaims, userDetails);
+
+    // RefreshToken refreshToken =
+    // refreshTokenService.createRefreshToken(user.getUsername());
+
+    // System.out.println("\n\nSending Login Notification...");
+    // // Send login notification
+    // try {
+    // emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
+    // System.out.println(
+    // "\n\nLogin Notification Sent Successfully!!..\nUser who Verified login :-\n"
+    // + printUserDetails(user) + "\n\n");
+    // } catch (MessagingException e) {
+    // throw new RuntimeException("\n\nFailed to send login notification", e);
+    // }
+
+    // return new LoginResponse("Login successful", true, jwtToken,
+    // refreshToken.getToken());
+    // }
+
+    @Transactional
+    public LoginResponse directLogin(SecureLoginRequest request, String ipAddress, String userAgent) {
+
+        User user;
+        
+        if (request.getIdentifier().contains("@")) {
+            user = userRepository.findByEmail(request.getIdentifier())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        } else {
+            user = userRepository.findByUsername(request.getIdentifier())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        }
 
         // Check if the account is locked
         try {
             loginAttemptService.checkLoginAttempts(user);
         } catch (AccountLockedException e) {
-            e.printStackTrace();
-        } // Throws AccountLockedException if locked
+            throw new RuntimeException("Account is locked");
+        }
 
         // Ensure the account is enabled
         if (!user.getEnabled()) {
@@ -182,88 +310,23 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Generate a unique login token
-        String token = UUID.randomUUID().toString();
-        String passwordHash = passwordEncoder.encode(request.getPassword());
-
-        // Create a new LoginVerificationToken
-        LoginVerificationToken loginToken = new LoginVerificationToken(
-                token, user.getEmail(), passwordHash, ipAddress, userAgent); // Use user's email here
-
-        // Remove any existing unconfirmed tokens for this user
-        loginVerificationTokenRepository.findByEmail(user.getEmail())
-                .ifPresent(loginVerificationTokenRepository::delete);
-
-        // Save the new token
-        loginVerificationTokenRepository.save(loginToken);
-
-        // Generate the login link
-        String loginLink = frontendUrl + "/form/login/verify-login?token=" + token;
-        System.out.println("\n\nLogin Link : " + loginLink + "\n\n");
-
-        System.out.println("\n\nSending Login Link...");
-        // Send the login link to the user's email
-        try {
-            emailService.sendLoginLink(user.getEmail(), loginLink); // Always send to user's email
-            System.out.println("\n\nLogin Link Sent Successfully!!!...\nUser who Initiated login :-\n"
-                    + printUserDetails(user) + "\n\n");
-            return "Login verification link sent to your email";
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send login verification email", e);
-        }
-    }
-
-    @Transactional
-    public LoginResponse verifyLoginToken(String token, String ipAddress, String userAgent) {
-        LoginVerificationToken loginToken = loginVerificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid login token"));
-
-        // Validate token
-        if (loginToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("Token already used");
-        }
-
-        if (loginToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Token expired");
-        }
-
-        // Verify IP and User Agent for additional security
-        if (!loginToken.getIpAddress().equals(ipAddress) ||
-                !loginToken.getUserAgent().equals(userAgent)) {
-            loginToken.setAttempts(loginToken.getAttempts() + 1);
-            loginVerificationTokenRepository.save(loginToken);
-            throw new SecurityException("Security verification failed");
-        }
-
-        // Mark token as confirmed
-        loginToken.setConfirmedAt(LocalDateTime.now());
-        loginVerificationTokenRepository.save(loginToken);
-
-        // Get user and reset login attempts
-        User user = userRepository.findByEmail(loginToken.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Reset login attempts on successful login
         loginAttemptService.resetAttempts(user);
         userRepository.save(user);
 
-        // Generate JWT token with additional claims
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("ip", ipAddress);
         extraClaims.put("loginTime", LocalDateTime.now().toString());
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
         String jwtToken = jwtService.generateToken(extraClaims, userDetails);
-
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
-        System.out.println("\n\nSending Login Notification...");
-        // Send login notification
         try {
             emailService.sendLoginNotification(user.getEmail(), ipAddress, userAgent);
-            System.out.println(
-                    "\n\nLogin Notification Sent Successfully!!..\nUser who Verified login :-\n"
-                            + printUserDetails(user) + "\n\n");
         } catch (MessagingException e) {
-            throw new RuntimeException("\n\nFailed to send login notification", e);
+            // Log the error but don't fail the login
+            e.printStackTrace();
         }
 
         return new LoginResponse("Login successful", true, jwtToken, refreshToken.getToken());

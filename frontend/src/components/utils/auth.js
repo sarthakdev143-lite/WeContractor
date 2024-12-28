@@ -83,7 +83,7 @@ export const AuthUtils = {
 
             console.log('Refresh token response:', response.data);
 
-            const { accessToken: newtoken, refreshToken: newRefreshToken } = response.data;
+            const { authToken: newtoken, refreshToken: newRefreshToken } = response.data;
             this.setTokens(newtoken, newRefreshToken);
 
             console.log('New access token:', newtoken);
@@ -126,7 +126,16 @@ export const AuthUtils = {
 
     async logout() {
         try {
-            await api.post('/api/auth/logout');
+            const { token } = this.getTokens();
+            if (!token) {
+                console.warn('No token found during logout');
+                this.removeTokens();
+                return;
+            }
+
+            await api.post('/api/auth/logout', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             this.removeTokens();
         } catch (error) {
             console.error('Logout API call failed:', error);

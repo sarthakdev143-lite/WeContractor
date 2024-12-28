@@ -7,6 +7,8 @@ import { validators } from "@/components/sell/utils";
 import { ToastContainer } from 'react-toastify';
 import { notify } from '@/components/notifications';
 import 'react-toastify/dist/ReactToastify.css';
+import toast, { Toaster } from 'react-hot-toast';
+import { useAuth } from "@/components/hooks/useAuth";
 
 // Error handling utility functions
 const handleValidationErrors = (errorData, setErrors) => {
@@ -48,7 +50,6 @@ const determineErrorField = (errorMessage) => {
 };
 
 const Login = () => {
-  // State management
   const [credentials, setCredentials] = useState({
     identifier: "", // Can be username or email
     password: "",
@@ -61,8 +62,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
+  const { login } = useAuth();
 
   // Form validation helper
   const validateField = (name, value) => {
@@ -114,19 +114,16 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log("Trying to Login with credentials :-\n" + JSON.stringify(credentials, null, 2));
-
-      const response = await MYAXIOS.post("/api/auth/initiate-login", {
+      const response = await MYAXIOS.post("/api/auth/login", {
         identifier: credentials.identifier,
         password: credentials.password
       });
 
       if (response.data.success) {
-        setEmailSent(true);
-        notify.success("Login verification link has been sent to your email!");
-
-        // Clear password but keep identifier for reference
-        setCredentials(prev => ({ ...prev, password: "" }));
+        console.log("Login Response : ", response.data);
+        await login(response.data.authToken, response.data.refreshToken);
+        // notify.success("Login successful!");
+        toast.loading("Loading User Dashboard", { duration: 4000 });
       } else {
         handleValidationErrors(response.data, setErrors);
       }
@@ -157,7 +154,6 @@ const Login = () => {
             notify.error(errorData.message || "An unexpected error occurred.");
         }
       } else if (error.request) {
-        console.log("Error Request : " + error.request);
         notify.error("Network error. Please check your connection.");
       } else {
         notify.error("Login failed. Please try again.");
@@ -178,69 +174,41 @@ const Login = () => {
           placeholder="Username / Email"
           error={errors.identifier}
           isLoading={isLoading}
-          disabled={emailSent}
         />
 
-        {!emailSent && (
-          <FormInput
-            type={showPassword ? "text" : "password"}
-            name="password"
-            value={credentials.password}
-            onChange={handleChange}
-            placeholder="Password"
-            error={errors.password}
-            isLoading={isLoading}
-            showPasswordToggle={true}
-            showPassword={showPassword}
-            onTogglePassword={() => setShowPassword(!showPassword)}
-          />
-        )}
+        <FormInput
+          type={showPassword ? "text" : "password"}
+          name="password"
+          value={credentials.password}
+          onChange={handleChange}
+          placeholder="Password"
+          error={errors.password}
+          isLoading={isLoading}
+          showPasswordToggle={true}
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword(!showPassword)}
+        />
 
-        {emailSent ? (
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <p className="text-blue-600 mb-2">Check your email!</p>
-            <p className="text-sm text-gray-600">
-              We&apos;ve sent a verification link to {credentials.identifier}
-            </p>
-          </div>
-        ) : (
-          <div className="flex relative items-center gap-2">
-            <button
-              type="submit"
-              disabled={isLoading || Object.values(errors).some(error => error !== "")}
-              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isLoading ? (
-                <>
-                  <i className="ri-loader-4-line animate-spin mr-2" />
-                  Sending Login Link...
-                </>
-              ) : (
-                'Send Login Link'
-              )}
-            </button>
-            <button
-              type="button"
-              className="text-white hover:text-gray-200 focus:outline-none"
-              onMouseEnter={() => setShowTooltip(true)}
-              onMouseLeave={() => setShowTooltip(false)}
-              onFocus={() => setShowTooltip(true)}
-              onBlur={() => setShowTooltip(false)}
-              aria-label="Login information"
-            >
-              <i className="ri-information-2-line text-black text-xl cursor-pointer"></i>
-            </button>
-            {showTooltip && (
-              <div className="absolute max-w-48 text-center top-2/3 -right-1/2 -translate-x-1/2 w-64 p-2 mt-2 md:text-sm text-base text-gray-600 bg-white border rounded-lg shadow-2xl">
-                A secure login link will be sent to your email address.
-              </div>
+        <div className="flex relative items-center gap-2">
+          <button
+            type="submit"
+            disabled={isLoading || Object.values(errors).some(error => error !== "")}
+            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {isLoading ? (
+              <>
+                <i className="ri-loader-4-line animate-spin mr-2" />
+                Logging in...
+              </>
+            ) : (
+              'Login'
             )}
-          </div>
-        )}
+          </button>
+        </div>
       </form>
       <ToastContainer
         position="top-right"
-        autoClose={10000}
+        autoClose={5000}
         limit={3}
         newestOnTop
         closeOnClick
@@ -250,6 +218,7 @@ const Login = () => {
         pauseOnHover
         theme="light"
       />
+      <Toaster />
     </section>
   );
 };
