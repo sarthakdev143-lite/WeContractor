@@ -202,7 +202,8 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                 src={mainImage}
                                 alt={plotData.title}
                                 className="w-full aspect-[4/3] object-cover"
-                                layout="fill"
+                                width={1000}
+                                height={1000}
                             />
                             <button
                                 onClick={() => handleImageFullscreen(
@@ -231,8 +232,8 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                                                 ? 'ring-2 ring-blue-500 scale-105'
                                                 : 'opacity-60 hover:opacity-100 hover:scale-105'
                                             }`}
-                                        width={100}
-                                        height={100}
+                                        width={1000}
+                                        height={1000}
                                     />
                                 </motion.div>
                             ))}
