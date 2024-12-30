@@ -36,6 +36,7 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
     const [isLiked, setIsLiked] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const [plotId, setPlotId] = useState<string | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const handleCopyLink = () => {
         const linkToCopy = window.location.href; // Change this to the desired link
@@ -88,56 +89,90 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
     }, []);
 
     const addToFavorite = async () => {
-        try {
-            if (!AuthUtils.isAuthenticated()) {
-                toast.error('Log in to save plots to Favorites.', {
-                    duration: 3000,
-                    position: 'top-center',
-                    style: {
-                        background: '#333',
-                        color: '#fff',
-                        padding: '12px',
-                        borderRadius: '8px'
-                    },
-                    icon: '🔒',
-                });
-                return;
-            }
+        if (!AuthUtils.isAuthenticated()) {
+            toast.error('Log in to save plots to Favorites.', {
+                duration: 3000,
+                position: 'top-center',
+                style: {
+                    background: '#333',
+                    color: '#fff',
+                    padding: '12px',
+                    borderRadius: '8px'
+                },
+                icon: '🔒',
+            });
+            return;
+        }
 
-            if (!plotId) {
-                toast.error('Plot ID is missing', {
-                    duration: 2000,
-                    position: 'top-center'
-                });
-                return;
-            }
+        if (!plotId) {
+            toast.error('Plot ID is missing', {
+                duration: 2000,
+                position: 'top-center'
+            });
+            return;
+        }
+
+        // Prevent duplicate requests
+        if (isUpdating) return;
+
+        // Store the previous state for rollback
+        const previousState = isLiked;
+
+        try {
+            setIsUpdating(true);
+
+            // Optimistically update the UI
+            setIsLiked(!isLiked);
 
             const AuthenticatedAxios = AuthUtils.createAuthenticatedAxios();
 
-            // Use proper HTTP methods for adding/removing favorites
-            if (isLiked) {
-                await AuthenticatedAxios.delete(`/api/favorites/remove/${plotId}`);
-            } else {
+            // Make the API request
+            if (!previousState) {
                 await AuthenticatedAxios.post(`/api/favorites/add/${plotId}`);
+            } else {
+                await AuthenticatedAxios.delete(`/api/favorites/remove/${plotId}`);
             }
 
-            // Toggle liked state after successful API call
-            setIsLiked(!isLiked);
-
-            // Show success message
-            toast.success(isLiked ? 'Removed from favorites' : 'Added to favorites', {
+            // Show success message after successful API call
+            toast.success(!previousState ? 'Added to favorites' : 'Removed from favorites', {
                 duration: 2000,
                 position: 'top-center'
             });
 
         } catch (error) {
             console.error('Error updating favorites:', error);
+
+            // Revert the optimistic update on error
+            setIsLiked(previousState);
+
             toast.error('Failed to update favorites', {
                 duration: 2000,
                 position: 'top-center'
             });
+        } finally {
+            setIsUpdating(false);
         }
     };
+
+    const HeartButton = () => (
+        <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => addToFavorite()}
+            disabled={isUpdating}
+            className={`p-2.5 sm:p-3 rounded-full ${isUpdating
+                ? 'bg-neutral-200 cursor-not-allowed'
+                : 'bg-neutral-100 hover:bg-neutral-200'
+                } transition-colors group`}
+        >
+            <Heart
+                className={`w-5 h-5 sm:w-7 sm:h-7 transition-all ${isLiked
+                    ? 'text-red-500 fill-current'
+                    : 'text-neutral-500 group-hover:text-red-500'
+                    } ${isUpdating ? 'opacity-50' : 'opacity-100'}`}
+            />
+        </motion.button>
+    );
 
     return (
         <motion.div
@@ -265,19 +300,7 @@ const PlotDetails: React.FC<{ plotData: PlotData }> = ({ plotData }) => {
                             </div>
 
                             <div className="flex space-x-2">
-                                <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={() => addToFavorite()}
-                                    className="p-2.5 sm:p-3 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors group"
-                                >
-                                    <Heart
-                                        className={`w-5 h-5 sm:w-7 sm:h-7 transition-colors ${isLiked
-                                            ? 'text-red-500 fill-current'
-                                            : 'text-neutral-500 group-hover:text-red-500'
-                                            }`}
-                                    />
-                                </motion.button>
+                                <HeartButton />
                                 <motion.button
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}

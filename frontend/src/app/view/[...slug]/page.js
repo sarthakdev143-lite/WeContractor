@@ -1,55 +1,80 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { MYAXIOS } from '@/components/Helper';
-import Loading from '@/components/LoadingSpinner';
-import PlotDetails from '@/components/PlotDetails';
+import { PlotSkeleton } from '@/components/PlotSkeleton';
 import NotFound from '@/app/not-found';
 
-export default function PlotPage({ params }) {
-    const [plotData, setPlotData] = React.useState(null);
-    const [isLoading, setIsLoading] = React.useState(true);
+// Dynamically import PlotDetails with loading fallback
+const PlotDetails = dynamic(() => import('@/components/PlotDetails'), {
+    loading: () => <PlotSkeleton />,
+    ssr: false
+});
 
-    React.useEffect(() => {
+// Create a cache for plot data
+const plotCache = new Map();
+
+export default function PlotPage({ params }) {
+    const [plotData, setPlotData] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
         if (!params.slug || params.slug.length < 2) {
-            setIsLoading(false);
+            setError('Invalid plot ID');
             return;
         }
 
         const plotId = params.slug[1];
         const viewKey = `viewedPlot-${plotId}`;
 
-        // Check if plot has been viewed in this session
-        const hasBeenViewed = sessionStorage.getItem(viewKey);
+        // Check cache first
+        if (plotCache.has(plotId)) {
+            setPlotData(plotCache.get(plotId));
+            return;
+        }
+
+        let isMounted = true;
+        const controller = new AbortController();
 
         async function fetchPlotData() {
             try {
-                // Only fetch if not previously viewed
-                if (!hasBeenViewed) {
-                    const response = await MYAXIOS.get(`/api/plots/${plotId}`);
+                const hasBeenViewed = sessionStorage.getItem(viewKey);
+                const endpoint = `/api/plots/${plotId}${hasBeenViewed ? '?noViewIncrement=true' : ''}`;
 
-                    // Mark as viewed in session storage
-                    sessionStorage.setItem(viewKey, 'true');
+                const response = await MYAXIOS.get(endpoint, {
+                    signal: controller.signal,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
 
-                    setPlotData(response.data);
-                } else {
-                    // If already viewed, fetch without incrementing views
-                    const response = await MYAXIOS.get(`/api/plots/${plotId}?noViewIncrement=true`);
-                    setPlotData(response.data);
+                if (isMounted) {
+                    const data = response.data;
+                    setPlotData(data);
+                    plotCache.set(plotId, data); // Cache the result
+                    !hasBeenViewed && sessionStorage.setItem(viewKey, 'true');
                 }
-
-                setIsLoading(false);
             } catch (error) {
-                console.error("Error fetching plot data : ", error);
-                setIsLoading(false);
+                if (error.name === 'AbortError') return;
+                if (isMounted) {
+                    setError(error.message);
+                    console.error("Error fetching plot data:", error);
+                }
             }
         }
 
         fetchPlotData();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
     }, [params.slug]);
 
-    if (isLoading) return <Loading />;
-    if (!plotData) return <NotFound />;
+    if (error) return <NotFound />;
+    if (!plotData) return <PlotSkeleton />;
 
     return <PlotDetails plotData={plotData} />;
 }

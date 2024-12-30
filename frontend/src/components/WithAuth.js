@@ -25,12 +25,12 @@ const WithAuth = (WrappedComponent) => {
                     if (response.data.success) {
                         setIsAuthorized(true);
                     } else {
-                        AuthUtils.removeToken();
+                        AuthUtils.removeTokens();
                         router.push('/form/login');
                     }
                 } catch (error) {
                     console.error('Token validation error:', error);
-                    AuthUtils.removeToken();
+                    AuthUtils.removeTokens();
                     router.push('/form/login');
                 } finally {
                     setIsValidating(false);
