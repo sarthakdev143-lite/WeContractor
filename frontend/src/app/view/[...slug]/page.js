@@ -54,7 +54,9 @@ export default function PlotPage({ params }) {
                     const data = response.data;
                     setPlotData(data);
                     plotCache.set(plotId, data); // Cache the result
-                    !hasBeenViewed && sessionStorage.setItem(viewKey, 'true');
+                    if (!hasBeenViewed) {
+                        sessionStorage.setItem(viewKey, 'true');
+                    }
                 }
             } catch (error) {
                 if (error.name === 'AbortError') return;
