@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MYAXIOS } from '@/components/Helper';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { Eye, MapPin, Tag, Ruler, Star, Clock } from 'lucide-react';
+import { Eye, MapPin, Tag, Ruler, Star, Clock, Building2 } from 'lucide-react';
+import PropertyCardSkeleton from './PropertyCardSkeleton';
 
 const Buy = () => {
     const [properties, setProperties] = useState([]);
@@ -15,8 +15,14 @@ const Buy = () => {
     const [sortType, setSortType] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredProperties, setFilteredProperties] = useState([]);
+    const [selectedPlotTypes, setSelectedPlotTypes] = useState([]);
+    const [selectedRating, setSelectedRating] = useState(0);
+    const [selectedViews, setSelectedViews] = useState('all');
+
     const priceSliderRef = useRef(null);
     const plotSizeSliderRef = useRef(null);
+
+    const skeletonArray = Array(6).fill(null);
 
     // Fetch properties from API
     useEffect(() => {
@@ -27,9 +33,14 @@ const Buy = () => {
 
                 const formattedProperties = response.data.map(prop => ({
                     ...prop,
+                    // No need to create new Date object here as we'll parse it in getTimeSinceAdded
+                    totalViews: Number(prop.totalViews) || 0,
+                    rating: Number(prop.rating) || 0,
+                    price: Number(prop.price) || 0,
+                    length: Number(prop.length) || 0,
+                    breadth: Number(prop.breadth) || 0,
+                    discount: Number(prop.discount) || 0
                 }));
-
-                console.log("formattedProperties : ", formattedProperties)
 
                 setProperties(formattedProperties);
                 setIsLoading(false);
@@ -43,14 +54,17 @@ const Buy = () => {
         fetchProperties();
     }, []);
 
-    const { minPrice, maxPrice, minPlotSize, maxPlotSize } = useMemo(() => {
+    const { minPrice, maxPrice, minPlotSize, maxPlotSize, uniquePlotTypes } = useMemo(() => {
         const prices = properties.map(property => property.price);
         const plotSizes = properties.map(property => property.length * property.breadth);
+        const types = [...new Set(properties.map(property => property.plotType))];
+
         return {
             minPrice: prices.length ? Math.min(...prices) : 0,
             maxPrice: prices.length ? Math.max(...prices) : 0,
             minPlotSize: plotSizes.length ? Math.min(...plotSizes) : 0,
-            maxPlotSize: plotSizes.length ? Math.max(...plotSizes) : 0
+            maxPlotSize: plotSizes.length ? Math.max(...plotSizes) : 0,
+            uniquePlotTypes: types
         };
     }, [properties]);
 
@@ -58,28 +72,83 @@ const Buy = () => {
     const [plotSizeRange, setPlotSizeRange] = useState([minPlotSize, maxPlotSize]);
     const [toggleFilters, setToggleFilters] = useState(false);
 
-    // Memoize filterProperties to prevent recreation on every render
-    const filterProperties = useCallback(() => {
-        if (properties.length === 0) return;
+    // Move filterProperties outside of the component or memoize it
+    const filterAndSortProperties = useCallback(() => {
+        if (!properties.length) return [];
 
-        const filtered = properties.filter(
-            (property) =>
-                (property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    property.tags.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        let filtered = properties.filter(property => {
+            const matchesSearch = (
+                property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                property.tags.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            const matchesPrice = (
                 property.price >= priceRange[0] &&
-                property.price <= priceRange[1] &&
+                property.price <= priceRange[1]
+            );
+
+            const matchesPlotSize = (
                 (property.length * property.breadth) >= plotSizeRange[0] &&
                 (property.length * property.breadth) <= plotSizeRange[1]
-        );
-        setFilteredProperties(filtered);
-    }, [searchQuery, priceRange, plotSizeRange, properties]);
+            );
 
+            const matchesPlotType = (
+                selectedPlotTypes.length === 0 ||
+                selectedPlotTypes.includes(property.plotType)
+            );
+
+            const matchesRating = (
+                selectedRating === 0 ||
+                property.rating >= selectedRating
+            );
+
+            const matchesViews = (() => {
+                switch (selectedViews) {
+                    case 'low': return property.totalViews < 10000;
+                    case 'medium': return property.totalViews >= 10000 && property.totalViews < 100000;
+                    case 'high': return property.totalViews >= 100000;
+                    default: return true;
+                }
+            })();
+
+            return matchesSearch && matchesPrice && matchesPlotSize &&
+                matchesPlotType && matchesRating && matchesViews;
+        });
+
+        // Apply sorting
+        switch (sortType) {
+            case 'price-low-to-high':
+                filtered.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-high-to-low':
+                filtered.sort((a, b) => b.price - a.price);
+                break;
+            case 'rating':
+                filtered.sort((a, b) => b.rating - a.rating);
+                break;
+            case 'newest':
+                filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+                break;
+            case 'most-viewed':
+                filtered.sort((a, b) => b.totalViews - a.totalViews);
+                break;
+            case 'plot-size-asc':
+                filtered.sort((a, b) => (a.length * a.breadth) - (b.length * b.breadth));
+                break;
+            case 'plot-size-desc':
+                filtered.sort((a, b) => (b.length * b.breadth) - (a.length * a.breadth));
+                break;
+        }
+
+        return filtered;
+    }, [properties, searchQuery, priceRange, plotSizeRange, sortType, selectedPlotTypes, selectedRating, selectedViews]);
+
+    // Update filteredProperties using useEffect
     useEffect(() => {
-        filterProperties();
-    }, [filterProperties]);
+        setFilteredProperties(filterAndSortProperties());
+    }, [filterAndSortProperties]);
 
-    // Effect to update price and plot size ranges
     useEffect(() => {
         setPriceRange([minPrice, maxPrice]);
         setPlotSizeRange([minPlotSize, maxPlotSize]);
@@ -96,33 +165,25 @@ const Buy = () => {
     };
 
     const handleSort = (e) => {
-        const sortBy = e.target.value;
-        setSortType(sortBy);
-        sortProperties(sortBy);
+        setSortType(e.target.value);
     };
 
-    const sortProperties = (sortBy) => {
-        let sortedProperties = [...properties];
+    const handlePlotTypeChange = (type) => {
+        setSelectedPlotTypes(prev =>
+            prev.includes(type)
+                ? prev.filter(t => t !== type)
+                : [...prev, type]
+        );
+    };
 
-        switch (sortBy) {
-            case 'price-low-to-high':
-                sortedProperties.sort((a, b) => a.price - b.price);
-                break;
-            case 'price-high-to-low':
-                sortedProperties.sort((a, b) => b.price - a.price);
-                break;
-            case 'rating':
-                sortedProperties.sort((a, b) => b.rating - a.rating);
-                break;
-            case 'newest':
-                sortedProperties.sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime());
-                break;
-            default:
-                // No sorting
-                break;
-        }
-
-        setProperties(sortedProperties);
+    const resetFilters = () => {
+        setSortType('');
+        setSearchQuery('');
+        setPriceRange([minPrice, maxPrice]);
+        setPlotSizeRange([minPlotSize, maxPlotSize]);
+        setSelectedPlotTypes([]);
+        setSelectedRating(0);
+        setSelectedViews('all');
     };
 
     const handleSearch = (e) => {
@@ -163,40 +224,49 @@ const Buy = () => {
         );
     };
 
-    const getTimeSinceAdded = (dateAdded) => {
-        // Handle non-standard timezone strings like "IST"
-        const standardizedDate = dateAdded.replace("IST", "GMT+0530");
-        const now = new Date();
-        const added = new Date(standardizedDate);
-        // console.log("Now : " + now + "\nDate Added : " + added + "\nParam : " + dateAdded);
+    const getTimeSinceAdded = useCallback((dateString) => {
+        try {
+            // Handle the specific date format with IST timezone
+            const dateWithoutIST = dateString.replace(' IST', '');
+            const added = new Date(dateWithoutIST);
+            const now = new Date();
 
-        if (isNaN(added.getTime())) {
-            return "Invalid Date Provided";
+            if (isNaN(added.getTime())) {
+                console.error('Invalid date:', dateString);
+                return "Date unavailable";
+            }
+
+            const diffTime = Math.abs(now - added);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (diffDays === 0) {
+                if (diffHours === 0) {
+                    if (diffMinutes === 0) {
+                        return 'Just now';
+                    }
+                    return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+                }
+                return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            }
+
+            if (diffDays < 30) {
+                return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            }
+
+            if (diffDays < 365) {
+                const months = Math.floor(diffDays / 30);
+                return `${months} month${months > 1 ? 's' : ''} ago`;
+            }
+
+            const years = Math.floor(diffDays / 365);
+            return `${years} year${years > 1 ? 's' : ''} ago`;
+        } catch (error) {
+            console.error('Error calculating time since added:', error, 'for date:', dateString);
+            return 'Date unavailable';
         }
-
-        const diffTime = Math.abs(now - added);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-        const diffMinutes = Math.ceil(diffTime / (1000 * 60));
-
-        if (diffMinutes <= 1) return 'Just now';
-        if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-        if (diffDays < 365) {
-            const months = Math.floor(diffDays / 30);
-            return `${months} month${months > 1 ? 's' : ''} ago`;
-        }
-        const years = Math.floor(diffDays / 365);
-        return `${years} year${years > 1 ? 's' : ''} ago`;
-    };
-
-    const resetFilters = () => {
-        setSortType('');
-        setSearchQuery('');
-        setPriceRange([minPrice, maxPrice]);
-        setPlotSizeRange([minPlotSize, maxPlotSize]);
-    };
+    }, []);
 
     const formatTotalViews = (totalViews) => {
         if (totalViews >= 100000000000) return ('100B+')
@@ -227,9 +297,10 @@ const Buy = () => {
     return (
         <section className="max-w-[120rem] w-full mx-auto h-fit md:p-8 sm:p-4 p-2 border border-gray-300 rounded-lg shadow-md bg-inherit flex flex-col gap-4">
             {isLoading ? (
-                <div className="flex flex-col justify-center items-center">
-                    <LoadingSpinner type='circle' text='.' />
-                    <p className="text-gray-500 text-xl transform -translate-y-20">Loading plots...</p>
+                <div className="flex flex-wrap justify-center gap-4">
+                    {skeletonArray.map((_, index) => (
+                        <PropertyCardSkeleton key={index} />
+                    ))}
                 </div>
             ) : error ? (
                 <div className="flex justify-center items-center">
@@ -237,153 +308,213 @@ const Buy = () => {
                 </div>
             ) : (
                 <>
-                    <div id="filters-wrapper" className={`${toggleFilters ? 'max-h-[1000px]' : 'max-h-0'} overflow-hidden`}>
-                        <div className="flex flex-wrap justify-between items-center bg-white bg-opacity-50 backdrop-blur w-full px-6 py-4 gap-6 rounded shadow-2xl relative">
-                            <div id="sort-by" className="sm:w-1/4 w-full flex items-center gap-3">
-                                <label htmlFor="sort" className="text-lg font-semibold text-gray-700 whitespace-nowrap">Sort By:</label>
-                                <select
-                                    id="sort"
-                                    value={sortType}
-                                    onChange={handleSort}
-                                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ease-in-out duration-150"
-                                >
-                                    <option value="">Featured</option>
-                                    <option value="price-low-to-high">Price: Low to High</option>
-                                    <option value="price-high-to-low">Price: High to Low</option>
-                                    <option value="rating">Avg. Customer Review</option>
-                                    <option value="newest">Newest Arrivals</option>
-                                </select>
+                    <div id="filters-wrapper"
+                        className={`${toggleFilters ? 'max-h-[1000px]' : 'max-h-0'} 
+                            transition-all duration-500 ease-in-out overflow-hidden`}>
+                        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 space-y-6">
+                            {/* Top Row - Search and Sort */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Search Properties
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Search by title or location"
+                                            value={searchQuery}
+                                            onChange={handleSearch}
+                                            className="w-full p-3 pl-4 border border-gray-200 rounded-lg bg-gray-50 
+                                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                             transition duration-200"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Sort Properties
+                                    </label>
+                                    <select
+                                        value={sortType}
+                                        onChange={handleSort}
+                                        className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50
+                                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                         transition duration-200"
+                                    >
+                                        <option value="">Featured</option>
+                                        <option value="price-low-to-high">Price: Low to High</option>
+                                        <option value="price-high-to-low">Price: High to Low</option>
+                                        <option value="rating">Highest Rated</option>
+                                        <option value="newest">Newest Arrivals</option>
+                                        <option value="most-viewed">Most Viewed</option>
+                                        <option value="plot-size-asc">Plot Size: Small to Large</option>
+                                        <option value="plot-size-desc">Plot Size: Large to Small</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div id="price-range" className="sm:w-1/3 w-full flex flex-col gap-2">
-                                <label className="text-lg font-semibold text-gray-700">Price Range:</label>
-                                <div className="relative w-full h-6" ref={priceSliderRef}>
-                                    <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
-                                    <div
-                                        className="absolute h-2 bg-blue-500 rounded-full top-2"
-                                        style={{
-                                            left: `${getThumbPosition(priceRange[0], minPrice, maxPrice)}%`,
-                                            right: `${100 - getThumbPosition(priceRange[1], minPrice, maxPrice)}%`
-                                        }}
-                                    ></div>
-                                    {[0, 1].map((index) => (
-                                        <div
-                                            key={index}
-                                            className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
-                                            style={{ left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%` }}
-                                            onMouseDown={(e) => {
-                                                e.preventDefault();
-                                                const handleMouseMove = (event) => {
-                                                    handleThumbMove(index, event.clientX, priceRange, setPriceRange, minPrice, maxPrice, priceSliderRef);
-                                                };
-                                                const handleMouseUp = () => {
-                                                    document.removeEventListener('mousemove', handleMouseMove);
-                                                    document.removeEventListener('mouseup', handleMouseUp);
-                                                };
-                                                document.addEventListener('mousemove', handleMouseMove);
-                                                document.addEventListener('mouseup', handleMouseUp);
-                                            }}
-                                            onTouchStart={(e) => {
-                                                e.preventDefault();
-                                                const handleTouchMove = (event) => {
-                                                    event.preventDefault();
-                                                    handleThumbMove(
-                                                        index,
-                                                        event.touches[0].clientX,
-                                                        priceRange,
-                                                        setPriceRange,
-                                                        minPrice,
-                                                        maxPrice,
-                                                        priceSliderRef
-                                                    );
-                                                };
-                                                const handleTouchEnd = () => {
-                                                    document.removeEventListener('touchmove', handleTouchMove);
-                                                    document.removeEventListener('touchend', handleTouchEnd);
-                                                };
-                                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                                document.addEventListener('touchend', handleTouchEnd);
-                                            }}
-                                        ></div>
+
+                            {/* Plot Types */}
+                            <div className="space-y-3">
+                                <label className="text-sm font-semibold text-gray-700">
+                                    Plot Types
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {uniquePlotTypes.map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => handlePlotTypeChange(type)}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 
+                                              transition-all duration-200 ${selectedPlotTypes.includes(type)
+                                                    ? 'bg-blue-500 text-white shadow-md'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            <Building2 className="w-4 h-4" />
+                                            {type}
+                                        </button>
                                     ))}
                                 </div>
-                                <div className="flex justify-between mt-2">
-                                    <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[0])}</span>
-                                    <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[1])}</span>
-                                </div>
                             </div>
-                            <div id="plot-size-range" className="sm:w-1/3 w-full flex flex-col gap-2">
-                                <label className="text-lg font-semibold text-gray-700">Plot Size Range (sq ft):</label>
-                                <div className="relative w-full h-6" ref={plotSizeSliderRef}>
-                                    <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
-                                    <div
-                                        className="absolute h-2 bg-green-500 rounded-full top-2"
-                                        style={{
-                                            left: `${getThumbPosition(plotSizeRange[0], minPlotSize, maxPlotSize)}%`,
-                                            right: `${100 - getThumbPosition(plotSizeRange[1], minPlotSize, maxPlotSize)}%`
-                                        }}
-                                    ></div>
-                                    {[0, 1].map((index) => (
+
+                            {/* Sliders Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Price Range Slider */}
+                                <div className="space-y-4">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Price Range
+                                    </label>
+                                    <div className="relative w-full h-6" ref={priceSliderRef}>
+                                        <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
                                         <div
-                                            key={index}
-                                            className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer touch-none"
-                                            style={{ left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%` }}
-                                            onMouseDown={(e) => {
-                                                e.preventDefault();
-                                                const handleMouseMove = (event) => {
-                                                    handleThumbMove(index, event.clientX, plotSizeRange, setPlotSizeRange, minPlotSize, maxPlotSize, plotSizeSliderRef);
-                                                };
-                                                const handleMouseUp = () => {
-                                                    document.removeEventListener('mousemove', handleMouseMove);
-                                                    document.removeEventListener('mouseup', handleMouseUp);
-                                                };
-                                                document.addEventListener('mousemove', handleMouseMove);
-                                                document.addEventListener('mouseup', handleMouseUp);
-                                            }}
-                                            onTouchStart={(e) => {
-                                                e.preventDefault();
-                                                const handleTouchMove = (event) => {
-                                                    event.preventDefault();
-                                                    handleThumbMove(
-                                                        index,
-                                                        event.touches[0].clientX,
-                                                        plotSizeRange,
-                                                        setPlotSizeRange,
-                                                        minPlotSize,
-                                                        maxPlotSize,
-                                                        plotSizeSliderRef
-                                                    );
-                                                };
-                                                const handleTouchEnd = () => {
-                                                    document.removeEventListener('touchmove', handleTouchMove);
-                                                    document.removeEventListener('touchend', handleTouchEnd);
-                                                };
-                                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                                document.addEventListener('touchend', handleTouchEnd);
+                                            className="absolute h-2 bg-blue-500 rounded-full top-2"
+                                            style={{
+                                                left: `${getThumbPosition(priceRange[0], minPrice, maxPrice)}%`,
+                                                right: `${100 - getThumbPosition(priceRange[1], minPrice, maxPrice)}%`
                                             }}
                                         ></div>
-                                    ))}
+                                        {[0, 1].map((index) => (
+                                            <div
+                                                key={index}
+                                                className="absolute w-6 h-6 bg-blue-500 rounded-full top-0 -ml-3 cursor-pointer 
+                                                 shadow-md hover:shadow-lg transition-shadow duration-200"
+                                                style={{
+                                                    left: `${getThumbPosition(priceRange[index], minPrice, maxPrice)}%`
+                                                }}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const handleMouseMove = (event) => {
+                                                        handleThumbMove(index, event.clientX, priceRange, setPriceRange, minPrice, maxPrice, priceSliderRef);
+                                                    };
+                                                    const handleMouseUp = () => {
+                                                        document.removeEventListener('mousemove', handleMouseMove);
+                                                        document.removeEventListener('mouseup', handleMouseUp);
+                                                    };
+                                                    document.addEventListener('mousemove', handleMouseMove);
+                                                    document.addEventListener('mouseup', handleMouseUp);
+                                                }}
+                                            ></div>
+                                        ))}
+                                    </div>
+                                    <div className="flex justify-between mt-1">
+                                        <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[0])}</span>
+                                        <span className="text-sm text-gray-600">₹{formatIndianPrice(priceRange[1])}</span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between mt-2">
-                                    <span className="text-sm text-gray-600">{plotSizeRange[0]} sq ft</span>
-                                    <span className="text-sm text-gray-600">{plotSizeRange[1]} sq ft</span>
+
+                                {/* Plot Size Slider */}
+                                <div className="space-y-4">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Plot Size (sq ft)
+                                    </label>
+                                    <div className="relative w-full h-6" ref={plotSizeSliderRef}>
+                                        <div className="absolute w-full h-2 bg-gray-200 rounded-full top-2"></div>
+                                        <div
+                                            className="absolute h-2 bg-green-500 rounded-full top-2"
+                                            style={{
+                                                left: `${getThumbPosition(plotSizeRange[0], minPlotSize, maxPlotSize)}%`,
+                                                right: `${100 - getThumbPosition(plotSizeRange[1], minPlotSize, maxPlotSize)}%`
+                                            }}
+                                        ></div>
+                                        {[0, 1].map((index) => (
+                                            <div
+                                                key={index}
+                                                className="absolute w-6 h-6 bg-green-500 rounded-full top-0 -ml-3 cursor-pointer 
+                                                 shadow-md hover:shadow-lg transition-shadow duration-200"
+                                                style={{
+                                                    left: `${getThumbPosition(plotSizeRange[index], minPlotSize, maxPlotSize)}%`
+                                                }}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const handleMouseMove = (event) => {
+                                                        handleThumbMove(index, event.clientX, plotSizeRange, setPlotSizeRange, minPlotSize, maxPlotSize, plotSizeSliderRef);
+                                                    };
+                                                    const handleMouseUp = () => {
+                                                        document.removeEventListener('mousemove', handleMouseMove);
+                                                        document.removeEventListener('mouseup', handleMouseUp);
+                                                    };
+                                                    document.addEventListener('mousemove', handleMouseMove);
+                                                    document.addEventListener('mouseup', handleMouseUp);
+                                                }}
+                                            ></div>
+                                        ))}
+                                    </div>
+                                    <div className="flex justify-between mt-1">
+                                        <span className="text-sm text-gray-600">{plotSizeRange[0]} sq ft</span>
+                                        <span className="text-sm text-gray-600">{plotSizeRange[1]} sq ft</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="search-bar" className="sm:w-1/4 w-full">
-                                <input
-                                    type="text"
-                                    placeholder="Search by title or location"
-                                    value={searchQuery}
-                                    onChange={handleSearch}
-                                    className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div id="reset-filters" className="w-full sm:w-auto">
-                                <button
-                                    onClick={resetFilters}
-                                    className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                                >
-                                    Reset Filters
-                                </button>
+
+                            {/* Bottom Row - Rating, Views, and Reset */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Minimum Rating
+                                    </label>
+                                    <select
+                                        value={selectedRating}
+                                        onChange={(e) => setSelectedRating(Number(e.target.value))}
+                                        className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50
+                                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                         transition duration-200"
+                                    >
+                                        <option value={0}>All Ratings</option>
+                                        <option value={4}>4+ Stars</option>
+                                        <option value={3}>3+ Stars</option>
+                                        <option value={2}>2+ Stars</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Views
+                                    </label>
+                                    <select
+                                        value={selectedViews}
+                                        onChange={(e) => setSelectedViews(e.target.value)}
+                                        className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50
+                                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                         transition duration-200"
+                                    >
+                                        <option value="all">All Views</option>
+                                        <option value="high">High (100k+)</option>
+                                        <option value="medium">Medium (10k-100k)</option>
+                                        <option value="low">Low (&lt;10k)</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex items-end">
+                                    <button
+                                        onClick={resetFilters}
+                                        className="w-full p-3 bg-red-500 text-white rounded-lg 
+                                         hover:bg-red-600 active:bg-red-700
+                                         transition-colors duration-200
+                                         focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                    >
+                                        Reset All Filters
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -398,106 +529,8 @@ const Buy = () => {
                     <div className="flex flex-wrap justify-center gap-8 w-full">
                         {filteredProperties.length > 0 ? (
                             filteredProperties.map((property, index) => (
-                                <Link
-                                    href={`/view/${property.title}/${property.id}`}
-                                    target='_blank'
-                                    key={index}
-                                    className="w-full sm:w-[45%] lg:w-[30%] h-fit group"
-                                >
-                                    <div className="relative hover:-translate-y-1 transition-all duration-200 bg-white rounded-2xl shadow-lg overflow-hidden 
-                                border border-gray-100 hover:border-blue-100 
-                                hover:shadow-2xl cursor-pointer">
-
-                                        {/* Image Section with Overlays */}
-                                        <div className="h-48 sm:h-64 md:h-72 relative overflow-hidden">
-                                            <Image
-                                                src={property.image}
-                                                alt="property first-look"
-                                                width={400}
-                                                height={150}
-                                                loading="lazy"
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            />
-
-                                            {/* Top Overlay Tags */}
-                                            <div className="absolute top-0 left-0 right-0 flex justify-between p-3">
-                                                <div className="flex gap-2">
-                                                    <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs flex items-center">
-                                                        <Tag className="w-3 h-3 mr-1" />
-                                                        {property.plotType}
-                                                    </span>
-                                                </div>
-                                                <span className="bg-gray-800 bg-opacity-70 text-white px-2 py-1 rounded-full text-xs flex items-center">
-                                                    <Clock className="w-3 h-3 mr-1" />
-                                                    {getTimeSinceAdded(property.dateAdded)}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Content Section */}
-                                        <div className="p-4 space-y-3">
-                                            {/* Title and Views */}
-                                            <div className="flex justify-between items-start">
-                                                <h2 className="text-xl font-bold text-gray-800 line-clamp-2 flex-grow pr-2">
-                                                    {property.title}
-                                                </h2>
-                                                <div className="flex items-center text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
-                                                    <Eye className="w-4 h-4 mr-1 text-blue-500" />
-                                                    <span className="text-xs font-medium">{formatTotalViews(property.totalViews)}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Description */}
-                                            <p className="text-sm text-gray-600 line-clamp-3 italic">
-                                                {property.description}
-                                            </p>
-
-                                            {/* Location */}
-                                            <div className="flex items-center text-gray-700 space-x-2">
-                                                <MapPin className="w-5 h-5 text-blue-500" />
-                                                <span className="text-sm truncate">{property.location}</span>
-                                            </div>
-
-                                            {/* Details Grid */}
-                                            <div className="flex gap-2 flex-wrap">
-                                                <div className="bg-blue-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[1.9]">
-                                                    <span className="bg-blue-100 p-1.5 rounded-full">
-                                                        <Ruler className="w-4 h-4 text-blue-600" />
-                                                    </span>
-                                                    <div>
-                                                        <p className="text-xs text-gray-500">Plot Size</p>
-                                                        <p className="text-sm font-semibold">{property.length}ft x {property.breadth}ft</p>
-                                                    </div>
-                                                </div>
-                                                <div className="bg-green-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[2]">
-                                                    <span className="bg-green-100 p-1.5 rounded-full">
-                                                        <Star className="w-4 h-4 text-green-600" />
-                                                    </span>
-                                                    <div>
-                                                        <p className="text-xs text-gray-500">Price</p>
-                                                        <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
-                                                            <span className="line-through text-gray-400">₹{formatIndianPrice(property.price)}</span>
-                                                            <span>₹{formatIndianPrice(getPriceAfterDiscount(property.price, property.discount))}</span>
-                                                            <span className="text-xs text-red-600 font-medium">({property.discount}% OFF)</span>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Footer */}
-                                            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                                                <p className="text-xs text-gray-500">Sold By: {property.soldBy}</p>
-                                                {property.rating > 0 && (
-                                                    <div className="flex items-center space-x-1">
-                                                        {renderStars(property.rating)}
-                                                        <span className="text-xs text-gray-600 ml-1">
-                                                            ({property.rating.toFixed(1)})
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
+                                <Link href={`/view/${property.title}/${property.id}`} target='_blank' key={index} className="w-full sm:w-[45%] lg:w-[30%] h-fit group">
+                                    <Property property={property} index={index} getTimeSinceAdded={getTimeSinceAdded} formatTotalViews={formatTotalViews} formatIndianPrice={formatIndianPrice} getPriceAfterDiscount={getPriceAfterDiscount} renderStars={renderStars} />
                                 </Link>
                             ))
                         ) : (
@@ -507,17 +540,98 @@ const Buy = () => {
                     <p className='mt-16 text-center text-gray-500'>You have reached the end.</p>
                 </>
             )}
-        </section >
+        </section>
     );
 };
 
 export default Buy;
 
-// TODO:
+const Property = ({ property, getTimeSinceAdded, formatTotalViews, formatIndianPrice, getPriceAfterDiscount, renderStars }) => {
+    return (
+        <div
+            className="relative hover:-translate-y-1 transition-all duration-200 bg-white rounded-2xl shadow-lg overflow-hidden
+                            border border-gray-100 hover:border-blue-100
+                            hover:shadow-2xl cursor-pointer"
+        >
+            <div className="h-48 sm:h-64 md:h-72 relative overflow-hidden">
+                <Image
+                    src={property.image}
+                    alt="property first-look"
+                    width={400}
+                    height={150}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
 
-//  Plot Size Filter - Include options for users to filter properties based on size (length x breadth) to ensure they find plots that meet their space requirements.
+                <div className="absolute top-0 left-0 right-0 flex justify-between p-3">
+                    <div className="flex gap-2">
+                        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs flex items-center">
+                            <Tag className="w-3 h-3 mr-1" />
+                            {property.plotType}
+                        </span>
+                    </div>
+                    <span className="bg-gray-800 bg-opacity-70 text-white px-2 py-1 rounded-full text-xs flex items-center">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {getTimeSinceAdded(property.dateAdded)}
+                    </span>
+                </div>
+            </div>
 
-//  Property Type Filter - Enable users to filter properties based on type (e.g., residential, commercial, land, etc.). - This can be a checkbox list allowing multiple selections.
+            <div className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                    <h2 className="text-xl font-bold text-gray-800 line-clamp-2 flex-grow pr-2">
+                        {property.title}
+                    </h2>
+                    <div className="flex items-center text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+                        <Eye className="w-4 h-4 mr-1 text-blue-500" />
+                        <span className="text-xs font-medium">{formatTotalViews(property.totalViews)}</span>
+                    </div>
+                </div>
 
-// Amenities Filter - Include filters for specific amenities, such as swimming pools, gardens, parking spaces, etc. Users can check boxes for the amenities desire. - This will basically search the input in the tags section of a property...
+                <p className="text-sm text-gray-600 line-clamp-3 italic">
+                    {property.description}
+                </p>
 
+                <div className="flex items-center text-gray-700 space-x-2">
+                    <MapPin className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm truncate">{property.location}</span>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                    <div className="bg-blue-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[1.9]">
+                        <span className="bg-blue-100 p-1.5 rounded-full">
+                            <Ruler className="w-4 h-4 text-blue-600" />
+                        </span>
+                        <div>
+                            <p className="text-xs text-gray-500">Plot Size</p>
+                            <p className="text-sm font-semibold">{property.length}ft x {property.breadth}ft</p>
+                        </div>
+                    </div>
+                    <div className="bg-green-50 p-2 rounded-lg flex items-center space-x-2 flex-grow-[2]">
+                        <span className="bg-green-100 p-1.5 rounded-full">
+                            <Star className="w-4 h-4 text-green-600" />
+                        </span>
+                        <div>
+                            <p className="text-xs text-gray-500">Price</p>
+                            <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                                <span className="line-through text-gray-400">₹{formatIndianPrice(property.price)}</span>
+                                <span>₹{formatIndianPrice(getPriceAfterDiscount(property.price, property.discount))}</span>
+                                <span className="text-xs text-red-600 font-medium">({property.discount}% OFF)</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <p className="text-xs text-gray-500">Sold By: {property.soldBy}</p>
+                    {property.rating > 0 && <div className="flex items-center space-x-1">
+                        {renderStars(property.rating)}
+                        <span className="text-xs text-gray-600 ml-1">
+                            ({property.rating.toFixed(1)})
+                        </span>
+                    </div>}
+                </div>
+            </div>
+        </div>
+    );
+}
