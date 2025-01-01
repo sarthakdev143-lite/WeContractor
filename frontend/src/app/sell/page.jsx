@@ -14,7 +14,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import dynamic from 'next/dynamic';
 import { useFormState } from '@/components/hooks/useFormState';
 
-const FileUploader = dynamic(() => import('@/components/sell/formFields'), {
+// Fix 1: Correct dynamic import syntax
+const FileUploader = dynamic(() =>
+    import('@/components/sell/formFields').then(mod => mod.FileUploader), {
     suspense: true,
     loading: () => <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
 });
@@ -42,7 +44,6 @@ const FormSkeleton = () => (
 
 const Sell = () => {
     const { formData, setFormData, formErrors, loading, handleSubmit, setLoading } = useFormState();
-
     const [submitStatus, setSubmitStatus] = useState(null);
 
     const { getRootProps: getImageRootProps, getInputProps: getImageInputProps } = useDropzone({
@@ -55,8 +56,22 @@ const Sell = () => {
         onDrop: (acceptedFiles) => onDrop(acceptedFiles, 'videos', setFormData, setLoading),
     });
 
+    // Fix 2: Wrap FileUploader components in error boundary
+    const renderFileUploader = (props) => {
+        try {
+            return (
+                <Suspense fallback={<div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>}>
+                    <FileUploader {...props} />
+                </Suspense>
+            );
+        } catch (error) {
+            console.error('Error rendering FileUploader:', error);
+            return <div>Error loading file uploader</div>;
+        }
+    };
+
     return (
-        <Suspense fallback={<FormSkeleton />} >
+        <Suspense fallback={<FormSkeleton />}>
             <div className="max-w-screen-xl mx-auto md:p-6 p-4 bg-white rounded-xl shadow-lg">
                 <h2 className="text-3xl font-bold mb-8 text-gray-800">List Your Plot</h2>
 
@@ -152,45 +167,35 @@ const Sell = () => {
                                 onRemove={(tag) => removeTag(tag, setFormData)}
                             />
 
-                            <FileUploader
-                                accept={{ 'image/*': ['.jpeg', '.jpg', '.png', '.gif'] }}
-                                label="Images"
-                                files={formData.images}
-                                onDrop={(acceptedFiles) => onDrop(acceptedFiles, 'images', setFormData, setLoading)}
-                                onRemove={(index) => onRemove(index, 'images', setFormData)}
-                                getRootProps={getImageRootProps}
-                                getInputProps={getImageInputProps}
-                                iconClass="ri-image-add-line"
-                                acceptedFormats="PNG, JPG, GIF up to 1MB"
-                            />
+                            {renderFileUploader({
+                                accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif'] },
+                                label: "Images",
+                                files: formData.images,
+                                onDrop: (acceptedFiles) => onDrop(acceptedFiles, 'images', setFormData, setLoading),
+                                onRemove: (index) => onRemove(index, 'images', setFormData),
+                                getRootProps: getImageRootProps,
+                                getInputProps: getImageInputProps,
+                                iconClass: "ri-image-add-line",
+                                acceptedFormats: "PNG, JPG, GIF up to 1MB"
+                            })}
 
-                            <FileUploader
-                                accept={{ 'video/*': ['.mp4', '.mov', '.avi'] }}
-                                label="Videos"
-                                files={formData.videos}
-                                onDrop={(acceptedFiles) => onDrop(acceptedFiles, 'videos', setFormData, setLoading)}
-                                onRemove={(index) => onRemove(index, 'videos', setFormData)}
-                                getRootProps={getVideoRootProps}
-                                getInputProps={getVideoInputProps}
-                                iconClass="ri-video-add-line"
-                                acceptedFormats="MP4, MOV up to 5MB"
-                            />
-
-
-                            {loading && (
-                                <div className="loading-skeleton flex items-center justify-center">
-                                    <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span className="ml-2">Uploading...</span>
-                                </div>
-                            )}
+                            {renderFileUploader({
+                                accept: { 'video/*': ['.mp4', '.mov', '.avi'] },
+                                label: "Videos",
+                                files: formData.videos,
+                                onDrop: (acceptedFiles) => onDrop(acceptedFiles, 'videos', setFormData, setLoading),
+                                onRemove: (index) => onRemove(index, 'videos', setFormData),
+                                getRootProps: getVideoRootProps,
+                                getInputProps: getVideoInputProps,
+                                iconClass: "ri-video-add-line",
+                                acceptedFormats: "MP4, MOV up to 5MB"
+                            })}
                         </section>
                     </div>
 
-                    <SubmitButton loadind={loading} />
+                    <SubmitButton loading={loading} />
                 </form>
+
                 <ToastContainer
                     position="top-right"
                     autoClose={10000}
@@ -204,16 +209,19 @@ const Sell = () => {
                     theme="light"
                 />
             </div>
-            {loading && <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-                <div className="bg-white p-6 rounded-lg shadow-xl">
-                    <div className="flex items-center space-x-3">
-                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-                        <span>Processing...</span>
+
+            {loading && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg shadow-xl">
+                        <div className="flex items-center space-x-3">
+                            <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+                            <span>Processing...</span>
+                        </div>
                     </div>
                 </div>
-            </div>}
-        </Suspense >
+            )}
+        </Suspense>
     );
-}
+};
 
 export default withAuth(Sell);
